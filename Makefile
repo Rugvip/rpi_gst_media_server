@@ -1,7 +1,7 @@
 CC=gcc
 
 CFLAGS=-Wall `pkg-config --cflags glib-2.0`
-LDFLAGS=`pkg-config --libs glib-2.0`
+LDFLAGS=`pkg-config --libs gio-2.0`
 
 all: mediastreamer
 
