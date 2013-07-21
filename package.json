@@ -1,0 +1,18 @@
+{
+	"name": "MediaServer",
+	"description": "One page webpage that controls mediastreamer",
+	"main": "./mediaserver.js",
+	"version": "0.0.1",
+	"author": {
+		"name": "Patrik Oldsberg"
+	},
+	"engines": {
+		"node": "=0.10.11"
+	},
+	"devDependencies": {
+		"colors": ">=0.6.0-1",
+		"underscore": ">=1.4.4",
+		"async": ">=0.2.9",
+	}
+
+}

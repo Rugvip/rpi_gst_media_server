@@ -1,0 +1,752 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"0x",
+				"0x0000FFFF"
+			],
+			[
+				"HASH_MAP_",
+				"HASH_MAP_BUCKET_SIZE"
+			],
+			[
+				"HAS",
+				"HASH_MAP_BUCKET_SIZE"
+			],
+			[
+				"HashBuc",
+				"HashBucket_print"
+			],
+			[
+				"sub",
+				"sublime_plugin"
+			],
+			[
+				"Bui",
+				"BuilderOp"
+			],
+			[
+				"Builder_",
+				"Builder_delim"
+			],
+			[
+				"Buil",
+				"Builder_delim"
+			],
+			[
+				"BUILDER",
+				"Builder_delim"
+			],
+			[
+				"Builder",
+				"BuilderDelim"
+			],
+			[
+				"Inst",
+				"IntStack_pop"
+			],
+			[
+				"te",
+				"test_structs"
+			],
+			[
+				"FIX",
+				"FIXED_FUNCTION_ASSIGN"
+			],
+			[
+				"TYPE_",
+				"TYPE_COMMAND"
+			],
+			[
+				"_Ob",
+				"_ObjectClass"
+			],
+			[
+				"COMMAND",
+				"COMMAND_PRINT"
+			],
+			[
+				"TY",
+				"TYPE_COMMAND"
+			],
+			[
+				"Co",
+				"CommandType"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "project.sublime-project",
+			"settings":
+			{
+				"buffer_size": 4,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Build script",
+	"command_palette":
+	{
+		"height": 85.0,
+		"selected_items":
+		[
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: ",
+				"Package Control: List Packages"
+			],
+			[
+				"package",
+				"Package Control: Install Package"
+			],
+			[
+				"pac",
+				"Preferences: Browse Packages"
+			],
+			[
+				"deco",
+				"Emmet: Encode\\Decode Image to data:URL"
+			],
+			[
+				"package ",
+				"Package Control: List Packages"
+			],
+			[
+				"sublimelin",
+				"SublimeLinter: Show Error List"
+			],
+			[
+				"sublimelinter",
+				"SublimeLinter: Show Error List"
+			],
+			[
+				"rot13",
+				"Rot13 Selection"
+			],
+			[
+				"menu",
+				"View: Toggle Menu"
+			],
+			[
+				"toggle",
+				"Toggle Comment"
+			]
+		],
+		"width": 514.0
+	},
+	"console":
+	{
+		"height": 232.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/C/Dropbox/aliases",
+		"/C/Program Files (x86)/Git/etc/profile",
+		"/C/Development/CodeBlocks/MinGW/include/malloc.h",
+		"/C/Development/CodeBlocks/MinGW/include/unistd.h",
+		"/C/Development/CodeBlocks/MinGW/include/winbase.h",
+		"/C/Development/CodeBlocks/MinGW/include/w32api.h",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/User/Default (Windows).sublime-keymap",
+		"/C/Dropbox/Lang/src/macros.h",
+		"/C/Development/MinGW/msys/1.0/etc/fstab",
+		"/C/Development/MinGW/msys/1.0/etc/profile",
+		"/C/Development/libs/C/glib-2.36.3/autogen.sh",
+		"/C/Program Files (x86)/Git/etc/fstab",
+		"/C/Development/MinGW/msys/1.0/etc/fstab.sample",
+		"/C/Users/Rugvip/AppData/Local/Temp/Rar$DRa0.840/libdrawtext-0.1/src/drawgl.c",
+		"/C/Users/Rugvip/AppData/Local/Temp/Rar$DRa0.027/libdrawtext-0.1/README",
+		"/C/Development/CodeBlocks/MinGW/include/wingdi.h",
+		"/C/Development/CodeBlocks/MinGW/include/winnetwk.h",
+		"/C/Development/CodeBlocks/MinGW/include/winreg.h",
+		"/C/Development/CodeBlocks/MinGW/include/winsock.h",
+		"/C/Development/CodeBlocks/MinGW/include/stdlib.h",
+		"/C/Development/CodeBlocks/MinGW/include/windows.h",
+		"/C/Development/CodeBlocks/MinGW/include/process.h",
+		"/C/Development/CodeBlocks/MinGW/include/io.h",
+		"/C/Development/CodeBlocks/MinGW/include/sys/unistd.h",
+		"/C/Dropbox/Lang/src/test/test_list.c",
+		"/C/Dropbox/Lang/src/list.c",
+		"/C/Dropbox/Lang/build.sh",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/BuildView/pipe_views.py",
+		"/C/Dropbox/Lang/src/builder.c",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/BuildView/commands.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/BuildView/Default (Windows).sublime-keymap",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/BuildView/Default.sublime-commands",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SelectionUtilities/selection_utilities.py",
+		"/C/Dropbox/Lang/project/lang.sublime-project",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/C/Dropbox/Lang/src/structs.c",
+		"/C/Dropbox/Lang/src/parser.c",
+		"/C/Dropbox/Lang/src/list.h",
+		"/C/Dropbox/Lang/src/parser.h",
+		"/C/Dropbox/Lang/src/builder.h",
+		"/C/Dropbox/Lang/src/lang.h",
+		"/C/Dropbox/Lang/src/map.c",
+		"/C/Dropbox/Lang/src/main.c",
+		"/C/Dropbox/Lang/.gitignore",
+		"/C/Program Files (x86)/Git/etc/bash_profile",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/User/Package Control.sublime-settings",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Package Control/Package Control.sublime-settings",
+		"/C/Dropbox/Lang/project/lang.sublime-workspace",
+		"/C/Dropbox/Lang/src/baller.c",
+		"/C/Dropbox/Lang/src/build.h",
+		"/C/Dropbox/Lang/src/lang.c",
+		"/C/Dropbox/Lang/src/parser/parser.h",
+		"/C/Dropbox/Lang/src/parser/builder.c",
+		"/C/Dropbox/Lang/src/parser/builder.h",
+		"/C/Dropbox/Lang/src/struct/structs.h",
+		"/C/Program Files (x86)/Git/etc/.bashrc",
+		"/C/Dropbox/Lang/lang.h",
+		"/C/Dropbox/Lang/project/main.c",
+		"/C/Dropbox/Lang/project/lang.h",
+		"/C/Dropbox/Lang/project/builder.h",
+		"/C/Dropbox/Lang/project/types.h",
+		"/C/Dropbox/Lang/project/parser.h",
+		"/C/Dropbox/Lang/project/build.bat",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SublimeLinter/SublimeLinter.py",
+		"/C/Dropbox/Lang/project/parser.c",
+		"/C/Program Files/Sublime Text 3/sublime.py",
+		"/C/Dropbox/Lang/project/lang.c",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/User/Default (Windows).sublime-mousemap",
+		"/C/Program Files/Sublime Text 2/sublime_plugin.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Obsidian Nexus/Obsidian Nexus.tmTheme",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Settings/Auto Save Session.sublime_session",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Settings/Session.sublime_session",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/delete_word.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/transpose.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/User/SublimeLinter.sublime-settings",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SublimeLinter/SublimeLinter.sublime-settings",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/Preferences.sublime-settings",
+		"/C/Program Files/Sublime Text 3/sublime_plugin.py",
+		"/C/Program Files/Sublime Text 3/select.pyd",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SubliminalCollaborator/libs/twisted/words/test/test_msn.py",
+		"/C/Program Files/Sublime Text 2/PackageSetup.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SublimeCodeIntel/Default (Windows).sublime-mousemap",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SideBarEnhancements/Default (Windows).sublime-keymap",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Alignment/Default (Windows).sublime-keymap",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SublimeREPL/SublimeREPL.sublime-settings",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SublimeLinter/Default (Windows).sublime-keymap",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/SublimeCodeIntel/Default (Windows).sublime-keymap",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/Delete Line.sublime-macro",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/exec.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/kill_ring.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/JavaScript Function Snippet/JavaScript Function Snippet.py",
+		"/C/Dropbox/Lang/test/macros.h",
+		"/C/Dropbox/Lang/test/test_structs.c",
+		"/C/Dropbox/Lang/bigScript",
+		"/C/Dropbox/Lang/script",
+		"/C/Dropbox/Lang/structs.h",
+		"/C/Dropbox/Lang/builder.c",
+		"/C/Dropbox/Lang/structs.c",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/paragraph.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/transform.py",
+		"/C/Users/Rugvip/AppData/Roaming/Sublime Text 2/Packages/Default/Add Line Before.sublime-macro",
+		"/C/Dropbox/Lang/test/builder.h",
+		"/C/Dropbox/Lang/test/test_structs",
+		"/C/Dropbox/Lang/stack.h",
+		"/C/Dropbox/Lang/stack.c",
+		"/C/Users/Patrik/AppData/Roaming/Sublime Text 2/Packages/User/SideBarEnhancements/Open With/Side Bar.sublime-menu",
+		"/C/Dropbox/Lang/lang.sublime-project",
+		"/C/Dropbox/dev/SublimePackages/User/Main.sublime-menu",
+		"/C/Dropbox/dev/SublimePackages/Makefile/Make.sublime-build",
+		"/C/Dropbox/lang.c"
+	],
+	"find":
+	{
+		"height": 37.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			"*.py",
+			"C:\\Dropbox\\dev\\SublimePackages"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"1",
+			"\\",
+			"libs",
+			"CodeBlocks",
+			"1.0",
+			"0.2",
+			"2.",
+			"0.5",
+			",",
+			"sleep",
+			"3.0.1",
+			"NO_MAIN",
+			"CFLAGS",
+			"\\",
+			"~~",
+			"parentPos",
+			"mask_set_right",
+			"mask_reset_left",
+			"mask_set_left",
+			"mask_set_right",
+			"mask",
+			"pos_",
+			" &",
+			" pos",
+			"pos",
+			"parent",
+			"parentPos",
+			"parent",
+			"HashBucket_new",
+			"HASH_TYPE",
+			"unsigned int",
+			"HASH_TYPE",
+			"insert",
+			"HASH_MAP_SIZE",
+			"HashBucket_getEntry",
+			"HashEntry_new",
+			"HashBucket_print",
+			" + 1",
+			"current",
+			"            ",
+			"           ",
+			"          ",
+			"         ",
+			"        ",
+			"       ",
+			"      ",
+			" ",
+			"left",
+			"right",
+			"HashBucket_print",
+			"GET_MAP_ROOT",
+			"FALSE",
+			"TRUE",
+			"FALSE",
+			"MAP_ROOT",
+			" + 1",
+			"level",
+			"watter",
+			"loller",
+			"watter",
+			"loller",
+			"watter",
+			"wutter",
+			"watter",
+			"mask_r",
+			"bit_left",
+			"MASK_RIGHT",
+			"BIT_LEFT",
+			"MASK",
+			"BUCKET_SET_RIGHT",
+			"unsigned long",
+			"bucket->mask",
+			"start",
+			"^static.*",
+			"bool",
+			"break",
+			"case",
+			"boolean",
+			"bucket_mask",
+			"bucket_map",
+			"true",
+			"shift",
+			"hash",
+			"if",
+			"super",
+			"}\n",
+			"EXEC",
+			"lx",
+			"inter",
+			"textcomma",
+			"line",
+			"sn-uxap5nvoxg5",
+			"http://",
+			"4g57",
+			"flv",
+			"=",
+			"&",
+			"&amp;",
+			"substr",
+			"transpose_line_by_line",
+			"self.",
+			"self",
+			"point",
+			"self.view.sel()",
+			"click_point",
+			"new_sel",
+			"self.view.sel()",
+			"beginPos",
+			"button1",
+			"+shift",
+			"{\n",
+			"str",
+			"size",
+			"mark",
+			";\n",
+			"command",
+			"command\": \"swap_line_down\" },\n	{ \"keys\" : [\"alt+ctrl+d\"], \"command\": \"indent\" },\n	{ \"keys\" : [\"alt+shift+w\"], \"command\": \"move_selection\", \"args\": {\"direction\": \"up\", \"extend\": true} },\n	{ \"keys\" : [\"alt+shift+a\"], \"command\": \"move_selection\", \"args\": {\"direction\": \"left\", \"extend\": true} },\n	{ \"keys\" : [\"alt+shift+s\"], \"command\": \"move_selection\", \"args\": {\"direction\": \"down\", \"extend\": true} },\n	{ \"keys\" : [\"alt+shift+d\"], \"command\": \"move_selection\", \"args\": {\"direction\": \"right\", \"extend\": true} },\n	{ \"keys\" : [\"ctrl+q\"], \"command\": \"run_macro_file\", \"args\": {\"file\": \"Packages/Default/Add Line.sublime-macro\"} },\n	{ \"keys\" : [\"ctrl+e\"], \"command\": \"find_under_expand\" },\n	{ \"keys\" : [\"ctrl+shift+e\"], \"command\": \"find_under_expand_skip\" },\n	{ \"keys\" : [\"ctrl+alt+e\"], \"command\": \"find_under_expand_skip\" },\n	{ \"keys\" : [\"ctrl+r\"], \"command\": \"expand_selection\", \"args\": {\"to\": \"scope\"} },\n	{ \"keys\" : [\"ctrl+t\"], \"command\": \"expand_selection\", \"args\": {\"to\": \"brackets\"} },\n	{ \"keys\" : [\"ctrl+y\"], \"command\": \"expand_selection\", \"args\": {\"to\": \"indentation\"} },\n	{ \"keys\" : [\"ctrl+shift+r\"], \"command\": \"redo_or_repeat\" },\n	{ \"keys\" : [\"ctrl+g\"], \"command\": \"show_overlay\", \"args\": {",
+			"command",
+			"s",
+			"layout_to_text",
+			"API name",
+			"API",
+			"0",
+			"button3",
+			"move_to",
+			"button3",
+			"{\"",
+			"shift"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"false",
+			"true",
+			"shift",
+			"\"ctrl+shift+e\"",
+			"ctrl",
+			"slurp_replace_string",
+			"\"],",
+			"ctrl"
+		],
+		"reverse": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "project.sublime-project",
+					"settings":
+					{
+						"buffer_size": 4,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"annotations":
+							[
+								"TODO",
+								"README",
+								"FIXME"
+							],
+							"auto_complete": false,
+							"codeintel": true,
+							"codeintel_config":
+							{
+								"JavaScript":
+								{
+									"codeintel_max_recursive_dir_depth": 2,
+									"codeintel_scan_files_in_project": false,
+									"javascriptExtraPaths":
+									[
+									]
+								},
+								"PHP":
+								{
+									"codeintel_max_recursive_dir_depth": 5,
+									"codeintel_scan_files_in_project": false,
+									"phpExtraPaths":
+									[
+									]
+								},
+								"Python":
+								{
+									"env":
+									{
+									}
+								}
+							},
+							"codeintel_disabled_languages":
+							[
+							],
+							"codeintel_live": true,
+							"codeintel_live_disabled_languages":
+							[
+							],
+							"codeintel_max_recursive_dir_depth": 10,
+							"codeintel_scan_exclude_dir":
+							{
+								"JavaScript":
+								[
+									"/build/",
+									"/min/"
+								]
+							},
+							"codeintel_scan_files_in_project": true,
+							"codeintel_selected_catalogs":
+							[
+								"PyWin32",
+								"jQuery",
+								"Rails"
+							],
+							"codeintel_snippets": true,
+							"codeintel_syntax_map":
+							{
+								"Python Django": "Python"
+							},
+							"csslint_options":
+							{
+								"adjoining-classes": "warning",
+								"box-model": true,
+								"box-sizing": "warning",
+								"compatible-vendor-prefixes": "warning",
+								"display-property-grouping": true,
+								"duplicate-background-images": "warning",
+								"duplicate-properties": true,
+								"empty-rules": true,
+								"errors": true,
+								"fallback-colors": "warning",
+								"floats": "warning",
+								"font-faces": "warning",
+								"font-sizes": "warning",
+								"gradients": "warning",
+								"ids": "warning",
+								"import": "warning",
+								"important": "warning",
+								"known-properties": true,
+								"outline-none": "warning",
+								"overqualified-elements": "warning",
+								"qualified-headings": "warning",
+								"regex-selectors": "warning",
+								"rules-count": "warning",
+								"shorthand": "warning",
+								"star-property-hack": "warning",
+								"text-indent": "warning",
+								"underscore-property-hack": "warning",
+								"unique-headings": "warning",
+								"universal-selector": "warning",
+								"vendor-prefix": true,
+								"zero-units": "warning"
+							},
+							"gjslint_ignore":
+							[
+								110
+							],
+							"gjslint_options":
+							[
+							],
+							"javascript_linter": "jslint",
+							"jshint_options":
+							{
+								"browser": true,
+								"evil": true,
+								"regexdash": true,
+								"sub": true,
+								"trailing": true,
+								"wsh": true
+							},
+							"jslint_options":
+							{
+								"anon": false,
+								"bitwise": false,
+								"browser": false,
+								"continue": true,
+								"css": false,
+								"debug": true,
+								"devel": true,
+								"eqeq": false,
+								"es5": true,
+								"evil": false,
+								"forin": false,
+								"fragment": false,
+								"indent": 4,
+								"maxerr": 10,
+								"maxlen": 120,
+								"newcap": false,
+								"node": true,
+								"nomen": true,
+								"on": false,
+								"passfail": false,
+								"plusplus": false,
+								"properties": false,
+								"regexp": true,
+								"rhino": false,
+								"sloppy": false,
+								"stupid": false,
+								"sub": false,
+								"todo": false,
+								"undef": false,
+								"unparam": false,
+								"vars": false,
+								"white": false,
+								"windows": false
+							},
+							"pep8": true,
+							"pep8_ignore":
+							[
+								"E501"
+							],
+							"perl_linter": "perlcritic",
+							"pyflakes_ignore":
+							[
+							],
+							"pyflakes_ignore_import_*": true,
+							"sublime_auto_complete": false,
+							"sublimelinter": true,
+							"sublimelinter_delay": 1,
+							"sublimelinter_disable":
+							[
+							],
+							"sublimelinter_executable_map":
+							{
+							},
+							"sublimelinter_fill_outlines": false,
+							"sublimelinter_gutter_marks": true,
+							"sublimelinter_gutter_marks_theme": "hard",
+							"sublimelinter_mark_style": "none",
+							"sublimelinter_notes": true,
+							"sublimelinter_objj_check_ascii": false,
+							"sublimelinter_popup_errors_on_save": true,
+							"sublimelinter_syntax_map":
+							{
+								"C++": "c",
+								"Python Django": "python",
+								"Ruby on Rails": "ruby"
+							},
+							"sublimelinter_wrap_find": true,
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 37.0
+	},
+	"input":
+	{
+		"height": 37.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 309.0
+	},
+	"replace":
+	{
+		"height": 66.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"build",
+				"build.sh"
+			],
+			[
+				"test_list",
+				"src/test/test_list.c"
+			],
+			[
+				"list.c",
+				"src/list.c"
+			],
+			[
+				"bui",
+				"build.sh"
+			],
+			[
+				"builder",
+				"src/builder.c"
+			],
+			[
+				"types",
+				"src/types.h"
+			],
+			[
+				"buil",
+				"build.sh"
+			],
+			[
+				"macro",
+				"src/macros.h"
+			],
+			[
+				"main",
+				"main.c"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true
+}

@@ -1,0 +1,12 @@
+{
+	"folders":
+	[
+        {
+            "path": "//PI/dev/nodejs/MediaServer"
+        },
+        {
+            "path": "//PI/dev/gstreamer/MediaStreamer",
+            "folder_exclude_patterns": ["obj"]
+        }
+	]
+}
