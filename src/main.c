@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <string.h>
@@ -22,12 +21,15 @@ void handle_json_request(GSocketConnection *connection, JsonNode *root)
         return;
     }
 
-    gchar *actionStr = json_object_get_string_member(rootObject, "action");
+    JsonNode *actionNode = json_object_get_member(rootObject, "action");
 
-    if (!strncmp(actionStr, "start", 6)) {
-        g_print("STARTING!\n");
-    } else if (!strncmp(actionStr, "stop", 5)) {
-        g_print("STOPPING!\n");
+    if (actionNode && json_node_get_value_type(actionNode) == G_TYPE_STRING) {
+        const gchar *str = json_node_get_string(actionNode);
+        if (!strncmp(str, "start", 6)) {
+            g_print("STARTING!\n");
+        } else if (!strncmp(str, "stop", 5)) {
+            g_print("STOPPING!\n");
+        }
     }
 
     GOutputStream *ostream = g_io_stream_get_output_stream(G_IO_STREAM(connection));
