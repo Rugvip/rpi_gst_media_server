@@ -1,7 +1,7 @@
 CC=gcc
 
-CFLAGS=-Wall `pkg-config --cflags glib-2.0`
-LDFLAGS=`pkg-config --libs gio-2.0`
+CFLAGS=-Wall -std=c11 `pkg-config --cflags json-glib-1.0`
+LDFLAGS=`pkg-config --libs json-glib-1.0`
 
 all: mediastreamer
 

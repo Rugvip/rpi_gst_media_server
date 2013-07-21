@@ -1,17 +1,15 @@
 var net = require('net');
 
 var testObj = {
-    str: "Hello World!",
-    number: 1337,
-    object: {
-        key: "value"
-    }
+    action: "start",
 }
 
 var socket = net.createConnection(3264);
+socket.setEncoding('ascii');
 
 socket.on('connect', function () {
     socket.write(JSON.stringify(testObj));
+    socket.end();
 });
 
 socket.on('end', function () {
@@ -19,5 +17,5 @@ socket.on('end', function () {
 });
 
 socket.on('data', function (data) {
-    console.log("Recieved data: %d", data);
+    console.log("Recieved data: %s", data);
 });
