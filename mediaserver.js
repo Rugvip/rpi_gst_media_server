@@ -33,17 +33,21 @@ fs.readdir(DIR, function (err, artists) {
 
 var server = http.createServer();
 
-server.on('request', function (request, response) {
-    console.log(request);
-    var body = JSON.stringify(db);
-    response.writeHead(200, {
-        'Content-Length': body.length,
-        'Content-Type': 'text/json'
-    })
-    response.end(body);
+server.on('request', function (req, res) {
+    console.log(req.url);
+    if (responseTable[req.url]) {
+        responseTable[req.url](req, res);
+    } else {
+        var notFound = "Not found";
+        res.writeHead(404, {
+            'Content-Length': notFound.length,
+            'Content-Type': 'text/plain'
+        });
+        res.end(notFound);
+    }
 });
 
-server.on('connect', function (request, socket, head) {
+server.on('connect', function (req, socket, head) {
     
 });
 
@@ -51,3 +55,30 @@ server.listen(PORT)
 
 console.log("Server listening to port %d", PORT);
 
+var responseTable = {
+    '/favicon.ico': function (req, res) {
+        res.writeHead(200, {
+            'Content-Type': 'image/icon'
+        })
+        var stream = fs.createReadStream('www/favicon.ico');
+        stream.pipe(res);
+        // stream.on('end', function () {
+        //     res.end();
+        // });
+    },
+    '/get': function (req, res) {
+        var body = JSON.stringify(db);
+        res.writeHead(200, {
+            'Content-Length': body.length,
+            'Content-Type': 'text/json'
+        });
+        res.end(body);
+    },
+    '/': function (req, res) {
+        res.writeHead(200, {
+            'Content-Type': 'text/html'
+        });
+        var stream = fs.createReadStream('www/index.html');
+        stream.pipe(res);
+    }
+}
