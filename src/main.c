@@ -1,3 +1,5 @@
+#include "pipeline.h"
+
 #include <glib.h>
 #include <gio/gio.h>
 #include <string.h>
@@ -27,7 +29,13 @@ void handle_json_request(GSocketConnection *connection, JsonNode *root)
         const gchar *str = json_node_get_string(actionNode);
         if (!strncmp(str, "start", 6)) {
             g_print("STARTING!\n");
+
+            JsonNode *fileNode = json_object_get_member(rootObject, "file");
+            if (fileNode && json_node_get_value_type(fileNode) == G_TYPE_STRING) {
+                playFile(json_node_get_string(fileNode));
+            }
         } else if (!strncmp(str, "stop", 5)) {
+            seek();
             g_print("STOPPING!\n");
         }
     }
@@ -100,7 +108,6 @@ gboolean on_client_connected(GSocketService    *server,
 int main(int argc, char const *argv[])
 {
     g_print("Hello wat!\n");
-    GMainLoop* main_loop;
     GSocketService *server;
     GError *error = NULL;
 
@@ -117,7 +124,6 @@ int main(int argc, char const *argv[])
 
     g_print("Entering main loop\n");
 
-    main_loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(main_loop);
+    start();
     return 0;
 }

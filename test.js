@@ -2,6 +2,7 @@ var net = require('net');
 
 var testObj = {
     action: "start",
+    file: "/home/pi/music/Daft_Punk/Random_Access_Memories/Contact"
 }
 
 var socket = net.createConnection(3264);

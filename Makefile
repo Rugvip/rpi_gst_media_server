@@ -4,24 +4,19 @@ CFLAGS=-Wall -Werror -std=c11
 LDFLAGS=
 
 GLIB_CFLAGS=`pkg-config --cflags json-glib-1.0`
-GLIB_LIBS=`pkg-config --cflags json-glib-1.0`
-
 GST_CFLAGS=`pkg-config --cflags gstreamer-1.0`
-GST_LIBS=`pkg-config --libs gstreamer-1.0`
 
+LIBS=`pkg-config --libs gstreamer-1.0 json-glib-1.0`
 
-all: mediastreamer pipeliner
+all: mediastreamer
 
-mediastreamer: obj/main.o
-	$(CC) $(LDFLAGS) $(GLIB_LIBS) -o mediastreamer obj/main.o
+mediastreamer: obj/main.o obj/pipeline.o
+	$(CC) $(LDFLAGS) -o mediastreamer obj/pipeline.o obj/main.o $(LIBS)
 
-obj/main.o: src/main.c
+obj/main.o: src/main.c src/pipeline.h
 	$(CC) $(CFLAGS) $(GLIB_CFLAGS) -c src/main.c -o obj/main.o
 
-pipeliner: obj/pipeline.o
-	$(CC) $(LDFLAGS) $(GST_LIBS) -o pipeliner obj/pipeline.o
-
-obj/pipeline.o: src/pipeline.c
+obj/pipeline.o: src/pipeline.c src/pipeline.h
 	$(CC) $(CFLAGS) $(GST_CFLAGS) -c src/pipeline.c -o obj/pipeline.o
 
 clean:
