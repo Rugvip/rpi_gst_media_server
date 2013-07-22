@@ -1,0 +1,21 @@
+body {
+    background-color: #303438;
+}
+
+.middle {
+    margin: 0 auto;
+}
+
+.frame {
+    background-color: #404448;
+    width: 600px;
+    height: 600px;
+    text-align: center;
+}
+
+.artist {
+    font-size: 28px;
+    color: #30A050;
+    text-align: left;
+    margin: 0 5px;
+}
