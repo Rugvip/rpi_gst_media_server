@@ -1,6 +1,6 @@
 CC=gcc
 
-CFLAGS=-Wall -Werror -std=c11
+CFLAGS=-Wall -Wextra -Werror -std=c11
 LDFLAGS=
 
 GLIB_CFLAGS=`pkg-config --cflags json-glib-1.0`
