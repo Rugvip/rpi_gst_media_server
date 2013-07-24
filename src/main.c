@@ -4,8 +4,16 @@
 #include <json-glib/json-glib.h>
 
 #define PORT 3264
+#define IN_BUFFER_SIZE 1024
+
+#define warn_if_error(str, error) if (error) { g_warning(str, error->message); }
 
 const gchar *MUSIC_DIR = "/home/pi/music";
+
+typedef struct {
+    GPtrArray *clients;
+    GDateTime *server_start_time;
+} ServerData;
 
 typedef struct {
     GSocketConnection *connection;
@@ -13,11 +21,10 @@ typedef struct {
     GOutputStream *out;
     gchar *remote_address;
     guint remote_port;
+    GDateTime *connection_time;
+    ServerData *server;
+    guchar *buffer;
 } ClientData;
-
-typedef struct {
-    GPtrArray *clients;
-} ConnectionData;
 
 void write_json_response(GSocketConnection *connection, JsonNode *root)
 {
@@ -31,9 +38,7 @@ void write_json_response(GSocketConnection *connection, JsonNode *root)
     ostream = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     json_generator_to_stream(generator, ostream, NULL, &error);
 
-    if (error) {
-        g_warning("Error sending json stream: %s\n", error->message);
-    }
+    warn_if_error("Error sending json stream: %s\n", error);
 
     g_object_unref(G_OBJECT(generator));
 }
@@ -111,9 +116,7 @@ void handle_json_request(GSocketConnection *connection, JsonNode *root)
     }
 }
 
-gpointer lebuf;
-
-void readstuff(GObject *obj, GAsyncResult *res, gpointer user_data)
+void on_client_connection_read(GObject *obj, GAsyncResult *res, ClientData *client)
 {
     GError *err = NULL;
     gssize len;
@@ -121,34 +124,41 @@ void readstuff(GObject *obj, GAsyncResult *res, gpointer user_data)
 
     len = g_input_stream_read_finish(istream, res, &err);
 
-    g_print("Buf %u: %s\n", len, (gchar*) lebuf);
+    if (len > 0) {
+        g_print("Buf %u: %s\n", len, client->buffer);
 
-    g_input_stream_read_async(istream, lebuf, 1024, G_PRIORITY_DEFAULT,
-        NULL, readstuff, user_data);
+        memset(client->buffer, 0, len);
+        g_input_stream_read_async(istream, client->buffer, 1024, G_PRIORITY_DEFAULT,
+            NULL, (GAsyncReadyCallback) on_client_connection_read, client);
+    } else {
+        if (err) {
+            g_warning("Error reading input stream, %s\n", err->message);
+        }
+        g_ptr_array_remove(client->server->clients, client);
+    }
 }
 
-void client_data_print_interator(ClientData *client, ConnectionData *data)
+void client_data_print_interator(ClientData *client, ServerData *server)
 {
-    UNUSED(data);
+    UNUSED(server);
     g_print("%s:%d\n", client->remote_address, client->remote_port);
 }
 
-gboolean connection_data_print_connections(ConnectionData *data)
+gboolean server_data_print_connections(ServerData *server)
 {
-    g_print("%d clients connected\n", data->clients->len);
-    g_ptr_array_foreach(data->clients, (GFunc) client_data_print_interator, data);
-    if (data->clients->len) {
-        g_print("removing1 %d\n", data->clients->len);
-        g_ptr_array_remove_index_fast(data->clients, 0);
-        g_print("removing2 %d\n", data->clients->len);
-    }
+    g_print("%d clients connected\n", server->clients->len);
+    g_ptr_array_foreach(server->clients, (GFunc) client_data_print_interator, server);
     return TRUE;
 }
 
-void read_client_connection_info(GSocketConnection *connection, ClientData *client)
+ClientData *client_data_new(ServerData *server, GSocketConnection *connection)
 {
     GError *error = NULL;
+    ClientData *client;
     GSocketAddress *remote_socket_address;
+
+    client = g_new0(ClientData, 1);
+
     remote_socket_address = g_socket_connection_get_remote_address(connection, &error);
     if (error) {
         g_warning("Error getting remote address: %s\n", error->message);
@@ -169,49 +179,50 @@ void read_client_connection_info(GSocketConnection *connection, ClientData *clie
     client->connection = connection;
     client->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
     client->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
+    client->connection_time = g_date_time_new_now_local();
+    client->server = server;
+    client->buffer = g_malloc0(IN_BUFFER_SIZE);
+
+    return client;
 }
 
-gboolean on_client_connected(GSocketService    *server,
+gboolean on_client_connected(GSocketService    *service,
                              GSocketConnection *connection,
                              GObject           *source_object,
-                             ConnectionData    *data)
+                             ServerData        *server)
 {
     GError *error = NULL;
     gboolean success;
     ClientData *client;
 
-    UNUSED(server);
+    UNUSED(service);
     UNUSED(source_object);
 
     g_object_ref(G_OBJECT(connection));
-    client = g_new0(ClientData, 1);
-    read_client_connection_info(connection, client);
-    g_print("adding1 %d\n", data->clients->len);
-    g_ptr_array_add(data->clients, client);
-    g_print("adding2 %d\n", data->clients->len);
+    client = client_data_new(server, connection);
+    g_ptr_array_add(server->clients, client);
+
+    g_input_stream_read_async(client->in, client->buffer, IN_BUFFER_SIZE, G_PRIORITY_DEFAULT,
+        NULL, (GAsyncReadyCallback) on_client_connection_read, client);
 
 
-    JsonParser *parser = json_parser_new();
-    error = NULL;
-    success = FALSE;
     while (0) {
+        JsonParser *parser = json_parser_new();
+        error = NULL;
         success = json_parser_load_from_stream(parser, client->in, NULL, &error);
-    }
 
-    g_input_stream_read_async(client->in, lebuf, 1024, G_PRIORITY_DEFAULT,
-        NULL, readstuff, connection);
-
-    if (success) {
-        handle_json_request(connection, json_parser_get_root(parser));
-    } else {
-        if (error) {
-            g_warning("Json parser error: %s\n", error->message);
+        if (success) {
+            handle_json_request(connection, json_parser_get_root(parser));
         } else {
-            g_warning("Json parser failed without error\n");
+            if (error) {
+                g_warning("Json parser error: %s\n", error->message);
+            } else {
+                g_warning("Json parser failed without error\n");
+            }
         }
-    }
 
-    g_object_unref(G_OBJECT(parser));
+        g_object_unref(G_OBJECT(parser));
+    }
     return TRUE;
 }
 
@@ -226,36 +237,54 @@ void on_client_data_connection_closed(GSocketConnection *connection,
             g_warning("Json parser failed without error\n");
         }
     }
-    g_print("Closing connection to %s:%d", client->remote_address, client->remote_port);
+
+    GDateTime *now = g_date_time_new_now_local();
+    GTimeSpan diff = g_date_time_difference(now, client->connection_time);
+    g_print("Closing connection to %s:%d\n", client->remote_address, client->remote_port);
+    g_print("Connected for %llud %lluh %llum %llus\n",
+        diff / G_TIME_SPAN_DAY,
+        (diff / G_TIME_SPAN_HOUR) % 24,
+        (diff / G_TIME_SPAN_MINUTE) % 60,
+        (diff / G_TIME_SPAN_SECOND) % 60);
 
     g_free(client->remote_address);
     client->remote_address = NULL;
     client->remote_port = 0;
+    g_date_time_unref(client->connection_time);
 }
 
 void client_data_free(ClientData *client)
 {
-    g_print("freen\n");
     g_io_stream_close_async(G_IO_STREAM(client->connection), G_PRIORITY_DEFAULT,
         NULL, (GAsyncReadyCallback) on_client_data_connection_closed, client);
 }
 
-void connection_data_init(ConnectionData *data)
+ServerData *server_data_new()
 {
-    g_print("init\n");
-    data->clients = g_ptr_array_new_with_free_func((GDestroyNotify) client_data_free);
+    ServerData *server;
+
+    server = g_new0(ServerData, 1);
+
+    server->clients = g_ptr_array_sized_new(10);
+    g_ptr_array_set_free_func(server->clients, (GDestroyNotify) client_data_free);
+    g_assert(server->clients);
+
+    server->server_start_time = g_date_time_new_now_local();
+
+    return server;
 }
 
-void setup_server(ConnectionData *data)
+void setup_server(ServerData *server)
 {
     GError *error = NULL;
-    GSocketService *server;
+    GSocketService *service;
 
-    server = g_socket_service_new();
+    service = g_socket_service_new();
+    g_assert(service);
 
-    g_socket_listener_add_inet_port(G_SOCKET_LISTENER(server), PORT, NULL, &error);
-    g_signal_connect(server, "incoming", G_CALLBACK(on_client_connected), &data);
-    g_socket_service_start(server);
+    g_socket_listener_add_inet_port(G_SOCKET_LISTENER(service), PORT, NULL, &error);
+    g_signal_connect(service, "incoming", G_CALLBACK(on_client_connected), server);
+    g_socket_service_start(service);
 
     if (error) {
         g_error(error->message);
@@ -269,13 +298,13 @@ int main(int argc, const char *argv[])
         g_print("Wai u passing arguments?");
     }
 
-    ConnectionData *data = g_new0(ConnectionData, 1);
-    lebuf = g_malloc0(1024);
+    ServerData *server;
 
-    connection_data_init(data);
-    setup_server(data);
+    server = server_data_new();
 
-    g_timeout_add(20000, (GSourceFunc) connection_data_print_connections, data);
+    setup_server(server);
+
+    g_timeout_add(60000, (GSourceFunc) server_data_print_connections, server);
 
     start();
     return 0;
