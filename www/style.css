@@ -2,20 +2,72 @@ body {
     background-color: #303438;
 }
 
-.middle {
-    margin: 0 auto;
+#play_frame {
+    background-color: #404448;
+    font-size: 28px;
+    color: #30A050;
+    text-align: center;
+    width: 99%;
+    margin: 10px 0;
+}
+
+#play_frame:hover {
+    background-color: #505458;
+}
+
+#play_frame:active {
+    background-color: #707478;
 }
 
 .frame {
     background-color: #404448;
-    width: 600px;
-    height: 600px;
     text-align: center;
+    width: 33%;
+    float: left;
+
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: column nowrap;
+    flex-flow: column nowrap;
+    -webkit-justify-content: center;
+    justify-content:center;
+}
+
+.container {
+    margin: 0 auto;
+    width: 60%;
+}
+
+.frame > div {
+    background-color: #505458;
+    font-size: 20px;
+    color: #30A050;
+    text-align: left;
+    margin: 3px 5px;
+    padding: 0 5px;
+
+    -webkit-flex: 1 0 auto;
+    flex: 1 0 auto;
+}
+
+.frame > div:hover {
+    background-color: #606468;
+}
+
+#artist_frame {
 }
 
 .artist {
-    font-size: 28px;
-    color: #30A050;
-    text-align: left;
-    margin: 0 5px;
+}
+
+#album_frame {
+}
+
+.album {
+}
+
+#song_frame {
+}
+
+.song {
 }
