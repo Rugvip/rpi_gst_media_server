@@ -1,73 +1,30 @@
 #include "pipeline.h"
 
+#include "jsongen.h"
+
 #include <string.h>
 #include <json-glib/json-glib.h>
 
 #define PORT 3264
 #define IN_BUFFER_SIZE 1024
 
-#define warn_if_error(str, error) if (error) { g_warning(str, error->message); }
-
 const gchar *MUSIC_DIR = "/home/pi/music";
-
-typedef struct {
-    GPtrArray *clients;
-    GDateTime *server_start_time;
-} ServerData;
-
-typedef struct {
-    GSocketConnection *connection;
-    GInputStream *in;
-    GOutputStream *out;
-    gchar *remote_address;
-    guint remote_port;
-    GDateTime *connection_time;
-    ServerData *server;
-    guchar *buffer;
-} ClientData;
-
-void write_json_response(GSocketConnection *connection, JsonNode *root)
-{
-    JsonGenerator *generator;
-    GOutputStream *ostream;
-    GError *error = NULL;
-
-    generator = json_generator_new();
-    json_generator_set_root(generator, root);
-
-    ostream = g_io_stream_get_output_stream(G_IO_STREAM(connection));
-    json_generator_to_stream(generator, ostream, NULL, &error);
-
-    warn_if_error("Error sending json stream: %s\n", error);
-
-    g_object_unref(G_OBJECT(generator));
-}
 
 void do_action_start_callback(UserData *data)
 {
-    JsonBuilder *builder;
-
-    builder = json_builder_new();
-    json_builder_begin_object(builder);
-    json_builder_add_string_value(
-        json_builder_set_member_name(builder, "response"), "ok");
-    json_builder_add_int_value(
-        json_builder_set_member_name(builder, "duration"), data->value);
-    json_builder_end_object(builder);
-
-    write_json_response(data->connection, json_builder_get_root(builder));
-
-    g_object_unref(G_OBJECT(builder));
+    JSON_PlaybackInfo info = {
+        .duration = data->value, .position = 0
+    };
+    jsongen_playback_start(data->client, &info);
     g_free(data);
 }
 
-void do_action_start(GSocketConnection *connection, JsonObject *root)
+void do_action_start(Client *client, JsonObject *root)
 {
-    g_object_ref(G_OBJECT(connection));
     JsonNode *fileNode = json_object_get_member(root, "file");
 
     UserData *data = g_new0(UserData, 1);
-    data->connection = connection;
+    data->client = client;
     data->callback =  do_action_start_callback;
     data->data = root;
 
@@ -76,47 +33,57 @@ void do_action_start(GSocketConnection *connection, JsonObject *root)
     }
 }
 
-void do_action_stop(GSocketConnection *connection, JsonObject *root)
-{
-    UNUSED(root);
-    JsonBuilder *builder;
-    set_position(20000);
-
-    builder = json_builder_new();
-    json_builder_begin_object(builder);
-    json_builder_add_string_value(
-        json_builder_set_member_name(builder, "response"), "ok");
-    json_builder_end_object(builder);
-
-    write_json_response(connection, json_builder_get_root(builder));
-    g_object_unref(G_OBJECT(builder));
-}
-
-void handle_json_request(GSocketConnection *connection, JsonNode *root)
+void handle_json_request(Client *client, JsonNode *root)
 {
     g_print("type: %s\n", json_node_type_name(root));
+    if (!root || JSON_NODE_TYPE(root) != JSON_NODE_OBJECT) {
+        g_warning("Invalid json received: root is not an object\n");
+    }
 
     JsonObject *rootObject = json_node_get_object(root);
 
-    if (!rootObject) {
-        g_warning("Warning: Json root node is not an object\n");
-        return;
-    }
-
     JsonNode *actionNode = json_object_get_member(rootObject, "action");
 
-    if (actionNode && json_node_get_value_type(actionNode) == G_TYPE_STRING) {
-        const gchar *str = json_node_get_string(actionNode);
-        g_print("Action: %s\n", str);
-        if (!strncmp(str, "start", 6)) {
-            do_action_start(connection, rootObject);
-        } else if (!strncmp(str, "stop", 5)) {
-            do_action_stop(connection, rootObject);
-        }
+    if (!actionNode) {
+        g_warning("Invalid json received: no action defined\n");
+    }
+    if (!JSON_NODE_HOLDS_VALUE(actionNode)) {
+        g_warning("Invalid json received: action is not a value\n");
+    }
+    if (json_node_get_value_type(actionNode) != G_TYPE_STRING) {
+        g_warning("Invalid json received: action is not a string\n");
+    }
+
+    const gchar *str = json_node_get_string(actionNode);
+    g_print("Action: %s\n", str);
+    if (!strncmp(str, "start", 6)) {
+        do_action_start(client, rootObject);
     }
 }
 
-void on_client_connection_read(GObject *obj, GAsyncResult *res, ClientData *client)
+void on_client_buffer_recieved(Client *client)
+{
+    GError *error = NULL;
+    JsonParser *parser;
+    gboolean success;
+
+    parser = json_parser_new();
+    success = json_parser_load_from_data(parser,client->buffer,client->buffer_len, &error);
+
+    if (success) {
+        handle_json_request(client, json_parser_get_root(parser));
+    } else {
+        if (error) {
+            g_warning("Json parser error: %s\n", error->message);
+        } else {
+            g_warning("Json parser failed without error\n");
+        }
+    }
+
+    g_object_unref(G_OBJECT(parser));
+}
+
+void on_client_connection_read(GObject *obj, GAsyncResult *res, Client *client)
 {
     GError *err = NULL;
     gssize len;
@@ -125,7 +92,11 @@ void on_client_connection_read(GObject *obj, GAsyncResult *res, ClientData *clie
     len = g_input_stream_read_finish(istream, res, &err);
 
     if (len > 0) {
-        g_print("Buf %u: %s\n", len, client->buffer);
+        client->buffer_len = len;
+
+        g_print("Buf %u: %s\n", client->buffer_len, client->buffer);
+
+        on_client_buffer_recieved(client);
 
         memset(client->buffer, 0, len);
         g_input_stream_read_async(istream, client->buffer, 1024, G_PRIORITY_DEFAULT,
@@ -138,26 +109,39 @@ void on_client_connection_read(GObject *obj, GAsyncResult *res, ClientData *clie
     }
 }
 
-void client_data_print_interator(ClientData *client, ServerData *server)
+gboolean server_send_playback_status(Server *server)
+{
+    JSON_PlaybackInfo info = {
+        .position = get_position(), .duration = get_duration()
+    };
+    g_print("Sending playback info to %d clients, %d/%d\n",
+        server->clients->len, info.position, info.duration);
+
+    g_ptr_array_foreach(server->clients, (GFunc) jsongen_playback_info, &info);
+
+    return TRUE;
+}
+
+void client_data_print_interator(Client *client, Server *server)
 {
     UNUSED(server);
     g_print("%s:%d\n", client->remote_address, client->remote_port);
 }
 
-gboolean server_data_print_connections(ServerData *server)
+gboolean server_data_print_connections(Server *server)
 {
     g_print("%d clients connected\n", server->clients->len);
     g_ptr_array_foreach(server->clients, (GFunc) client_data_print_interator, server);
     return TRUE;
 }
 
-ClientData *client_data_new(ServerData *server, GSocketConnection *connection)
+Client *client_data_new(Server *server, GSocketConnection *connection)
 {
     GError *error = NULL;
-    ClientData *client;
+    Client *client;
     GSocketAddress *remote_socket_address;
 
-    client = g_new0(ClientData, 1);
+    client = g_new0(Client, 1);
 
     remote_socket_address = g_socket_connection_get_remote_address(connection, &error);
     if (error) {
@@ -189,11 +173,9 @@ ClientData *client_data_new(ServerData *server, GSocketConnection *connection)
 gboolean on_client_connected(GSocketService    *service,
                              GSocketConnection *connection,
                              GObject           *source_object,
-                             ServerData        *server)
+                             Server        *server)
 {
-    GError *error = NULL;
-    gboolean success;
-    ClientData *client;
+    Client *client;
 
     UNUSED(service);
     UNUSED(source_object);
@@ -204,30 +186,11 @@ gboolean on_client_connected(GSocketService    *service,
 
     g_input_stream_read_async(client->in, client->buffer, IN_BUFFER_SIZE, G_PRIORITY_DEFAULT,
         NULL, (GAsyncReadyCallback) on_client_connection_read, client);
-
-
-    while (0) {
-        JsonParser *parser = json_parser_new();
-        error = NULL;
-        success = json_parser_load_from_stream(parser, client->in, NULL, &error);
-
-        if (success) {
-            handle_json_request(connection, json_parser_get_root(parser));
-        } else {
-            if (error) {
-                g_warning("Json parser error: %s\n", error->message);
-            } else {
-                g_warning("Json parser failed without error\n");
-            }
-        }
-
-        g_object_unref(G_OBJECT(parser));
-    }
     return TRUE;
 }
 
 void on_client_data_connection_closed(GSocketConnection *connection,
-    GAsyncResult *result, ClientData *client)
+    GAsyncResult *result, Client *client)
 {
     GError *error;
     if (!g_io_stream_close_finish(G_IO_STREAM(connection), result, &error)) {
@@ -253,17 +216,17 @@ void on_client_data_connection_closed(GSocketConnection *connection,
     g_date_time_unref(client->connection_time);
 }
 
-void client_data_free(ClientData *client)
+void client_data_free(Client *client)
 {
     g_io_stream_close_async(G_IO_STREAM(client->connection), G_PRIORITY_DEFAULT,
         NULL, (GAsyncReadyCallback) on_client_data_connection_closed, client);
 }
 
-ServerData *server_data_new()
+Server *server_data_new()
 {
-    ServerData *server;
+    Server *server;
 
-    server = g_new0(ServerData, 1);
+    server = g_new0(Server, 1);
 
     server->clients = g_ptr_array_sized_new(10);
     g_ptr_array_set_free_func(server->clients, (GDestroyNotify) client_data_free);
@@ -274,7 +237,7 @@ ServerData *server_data_new()
     return server;
 }
 
-void setup_server(ServerData *server)
+void setup_server(Server *server)
 {
     GError *error = NULL;
     GSocketService *service;
@@ -293,18 +256,20 @@ void setup_server(ServerData *server)
 
 int main(int argc, const char *argv[])
 {
-    g_print("Initializing in %s\n", argv[0]);
+    g_print("Initializing %s\n", argv[0]);
     if (argc > 1) {
         g_print("Wai u passing arguments?");
     }
 
-    ServerData *server;
+    Server *server;
 
     server = server_data_new();
 
     setup_server(server);
 
     g_timeout_add(60000, (GSourceFunc) server_data_print_connections, server);
+
+    g_timeout_add(10000, (GSourceFunc) server_send_playback_status, server);
 
     start();
     return 0;

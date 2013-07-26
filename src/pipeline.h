@@ -9,6 +9,7 @@
 
 void seek(gint ms);
 
+gint get_duration();
 gint get_position();
 void set_position(gint mstime);
 
@@ -20,8 +21,25 @@ typedef void (*Callback) (UserData*);
 
 #define CALLBACK(func) ((Callback) func)
 
-struct _UserData {
+typedef struct {
+    GPtrArray *clients;
+    GDateTime *server_start_time;
+} Server;
+
+typedef struct {
     GSocketConnection *connection;
+    GInputStream *in;
+    GOutputStream *out;
+    gchar *remote_address;
+    guint remote_port;
+    GDateTime *connection_time;
+    Server *server;
+    gchar *buffer;
+    gssize buffer_len;
+} Client;
+
+struct _UserData {
+    Client *client;
     Callback callback;
     gint value;
     gpointer data;

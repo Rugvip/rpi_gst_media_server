@@ -2,9 +2,10 @@
 
 #include <gst/gst.h>
 
-GstElement *pipeline, *source, *parser, *decoder, *sink;
+GstElement *pipeline, *source, *parser, *decoder, *volume, *sink;
 
-gint get_duration(){
+gint get_duration()
+{
     static GstQuery *query = NULL;
 
     if (!query) {
@@ -20,7 +21,8 @@ gint get_duration(){
     }
 }
 
-gint get_position(){
+gint get_position()
+{
     gint64 position = -1;
     if (gst_element_query_position(parser, GST_FORMAT_TIME, &position)) {
         return (gint) GST_TIME_AS_MSECONDS(position);
@@ -38,7 +40,8 @@ void set_position(gint ms)
     }
 }
 
-gboolean timeout_duration_query(UserData *data) {
+gboolean timeout_duration_query(UserData *data)
+{
     gint duration = get_duration();
     if (duration < 0) {
         return TRUE;
@@ -104,30 +107,43 @@ void start()
     guint bus_watch_id;
 
 
-    char **argv = (char *[]) {
+    char *args[] = {
+        "mp3net",
         "--gst-debug-level=3"
     };
-    int argc = sizeof(argv)/sizeof(gchar *);
+    char **argv = args;
+    int argc = sizeof(args)/sizeof(gchar *);
 
+    g_print("count: %d\n", argc);
     gst_init(&argc, &argv);
     loop = g_main_loop_new(NULL, FALSE);
-
+GstElement *eq;
     /* Create gstreamer elements */
-    pipeline = gst_pipeline_new ("mp3-player");
-    source   = gst_element_factory_make ("filesrc"       , "file-source");
-    parser   = gst_element_factory_make ("mpegaudioparse", "mpeg-parse");
-    decoder  = gst_element_factory_make ("mad"           , "mad");
-    sink     = gst_element_factory_make ("alsasink"      , "alsa-sink");
+    pipeline = gst_pipeline_new("mp3-player");
+    source   = gst_element_factory_make("filesrc"        , "file-source");
+    parser   = gst_element_factory_make("mpegaudioparse" , "mpeg-parse");
+    decoder  = gst_element_factory_make("mpg123audiodec" , "mad");
+    volume   = gst_element_factory_make("volume"         , "volume");
+    eq   = gst_element_factory_make("equalizer-10bands"         , "eq");
+    sink     = gst_element_factory_make("alsasink"       , "alsa-sink");
 
     g_assert(pipeline);
     g_assert(source);
     g_assert(parser);
     g_assert(decoder);
+    g_assert(volume);
+    g_assert(eq);
     g_assert(sink);
 
-    const gchar *location = "/home/pi/music/Daft Punk/Random Access Memories/Contact";
+    const gchar *location = "/home/pi/music/Grendel/Best Of Grendel/Harsh Generation";
     /* we set the input filename to the source element */
     g_object_set(G_OBJECT(source), "location", location, NULL);
+
+    g_object_set(G_OBJECT(volume), "volume", 1.0, NULL);
+    g_object_set(G_OBJECT(eq), "band0", 4.0, NULL);
+    g_object_set(G_OBJECT(eq), "band1", 3.0, NULL);
+    g_object_set(G_OBJECT(eq), "band2", 2.0, NULL);
+    g_object_set(G_OBJECT(eq), "band3", 1.0, NULL);
 
     /* we add a message handler */
     bus = gst_pipeline_get_bus(GST_PIPELINE (pipeline));
@@ -135,10 +151,10 @@ void start()
     gst_object_unref(bus);
 
     /* we add all elements into the pipeline */
-    gst_bin_add_many(GST_BIN(pipeline), source, parser, decoder, sink, NULL);
+    gst_bin_add_many(GST_BIN(pipeline), source, parser, decoder, volume, eq, sink, NULL);
 
     /* we link the elements together */
-    gst_element_link_many(source, parser, decoder, sink, NULL);
+    gst_element_link_many(source, parser, decoder, volume, eq, sink, NULL);
 
     /* Set the pipeline to "playing" state*/
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
