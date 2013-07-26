@@ -1,16 +1,21 @@
-var _ = require('underscore');
-var a_ = require('async');
-var fs = require('fs');
-var http = require('http');
-var net = require('net');
-var path = require('path');
-var querystring = require('querystring');
+var app  = require('http').createServer(requestHandler)
+  , io   = require('socket.io').listen(app)
+  , _    = require('underscore')
+  , a_   = require('async')
+  , fs   = require('fs')
+  , net  = require('net')
+  , path = require('path')
+
 require('colors');
 
 var MUSIC_DIR = '/home/pi/music'
 var PORT = 80;
 
 var db = {};
+
+app.listen(PORT);
+
+console.log("Server listening to port %d", PORT);
 
 fs.readdir(MUSIC_DIR, function (err, artists) {
     a_.each(artists, function (artist, artistCallback) {
@@ -33,9 +38,7 @@ fs.readdir(MUSIC_DIR, function (err, artists) {
     });
 });
 
-var server = http.createServer();
-
-server.on('request', function (req, res) {
+function requestHandler(req, res) {
     console.log(req.url);
     if (req.method === 'GET') {
         if (getTable[req.url]) {
@@ -55,32 +58,25 @@ server.on('request', function (req, res) {
             res.end();
         }
     }
-});
-
-server.on('connect', function (req, socket, head) {
-
-});
-
-server.listen(PORT)
-
-console.log("Server listening to port %d", PORT);
+};
 
 var staticResponse = function(file, type) {
     return function (req, res) {
         res.writeHead(200, {
             'Content-Type': type
         });
-        fs.createReadStream(file).pipe(res);
+        fs.createReadStream(__dirname + '/www/' + file).pipe(res);
     }
 }
 
 var getTable = {
-    '/favicon.ico': staticResponse('www/favicon.ico', 'image/icon'),
-    '/': staticResponse('www/index.html', 'text/html'),
-    '/style.css': staticResponse('www/style.css', 'text/css'),
-    '/script.js': staticResponse('www/script.js', 'application/ecmascript'),
-    '/jquery.js': staticResponse('www/jquery-2.0.2.js', 'application/ecmascript'),
-    '/underscore.js': staticResponse('www/underscore.js', 'application/ecmascript'),
+    '/favicon.ico': staticResponse('img/favicon.ico', 'image/icon'),
+    '/': staticResponse('index.html', 'text/html'),
+    '/style.css': staticResponse('css/style.css', 'text/css'),
+    '/script.js': staticResponse('js/script.js', 'application/ecmascript'),
+    '/jquery.js': staticResponse('js/jquery-2.0.2.js', 'application/ecmascript'),
+    '/underscore.js': staticResponse('js/underscore.js', 'application/ecmascript'),
+    '/bootstrap.js': staticResponse('js/bootstrap.js', 'application/ecmascript'),
     '/get': function (req, res) {
         var body = JSON.stringify(db);
         res.writeHead(200, {
@@ -93,23 +89,11 @@ var getTable = {
         mediaServerRequest({
             action: 'start',
             file: "/home/pi/music/Daft Punk/Random Access Memories/Contact"
-        }, function (json) {
-            console.log("Body: %j", json);
-            res.writeHead(200, {
-                'Content-Type': 'text/plain'
-            });
-            res.end("Done");
         });
     },
     '/seek': function (req, res) {
         mediaServerRequest({
             action: 'stop'
-        }, function (json) {
-            console.log("Body: %j", json);
-            res.writeHead(200, {
-                'Content-Type': 'text/plain'
-            });
-            res.end("Done");
         });
     }
 }
@@ -138,22 +122,30 @@ var mediaRequestActionTable = {
         mediaServerRequest({
             action: 'start',
             file: file
-        }, function (json) {
-            res.end(json.response);
         });
     }
 }
 
-var mediaServerRequest = function () {
-    var socket;
-    return function (jsonReq, callback) {
-        if (!socket) {
-            socket = net.createConnection(3264);
-            socket.setEncoding('ascii');
-        }
-        socket.once('data', function (data) {
-            callback(JSON.parse(data));
-        });
-        socket.write(JSON.stringify(jsonReq));
-    }
+// Connect to media server an set up event handlers
+var mediaServer = function() {
+    var socket = net.createConnection(3264);
+    socket.setEncoding('ascii');
+
+    socket.on('data', function (data) {
+        console.log(data);
+        io.sockets.emit('playback', data);
+    });
+    return socket;
 }();
+
+var mediaServerRequest = function (jsonReq) {
+    mediaServer.write(JSON.stringify(jsonReq));
+};
+
+io.sockets.on('connection', function (socket) {
+    console.log("wat");
+    socket.emit('msg', "Hello thar!");
+    socket.on('response', function (response) {
+        console.log("Response " + response);
+    });
+});

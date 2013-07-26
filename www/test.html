@@ -1,20 +1,19 @@
 <html>
 <head>
-    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io.connect(self.location.host);
+      socket.on('news', function (data) {
+        console.log(data);
+        socket.emit('my other event', { my: 'data' });
+      });
+    </script>
 </head>
 <body>
-    <div class="container">
-        <div id="play_frame">Play</div>
-        <div id="artist_frame" class="frame"></div>
-        <div id="album_frame" class="frame"></div>
-        <div id="song_frame" class="frame"></div>
+    <div>
+        HURR DURR
     </div>
 </body>
 <footer>
-    <script src="jquery.js"></script>
-    <script src="underscore.js"></script>
-    <script src="bootstrap.js"></script>
-    <script src="socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
 </footer>
 </html>

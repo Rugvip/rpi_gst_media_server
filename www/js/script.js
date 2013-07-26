@@ -7,6 +7,17 @@ $(function () {
         song: null
     }
 
+    var socket = io.connect();
+
+    socket.on('msg', function (msg) {
+        console.log("Message received: " + msg);
+        socket.emit('response', "I got your message!");
+    });
+
+    socket.on('playback', function (info) {
+        console.log("Got playback info: ", info);
+    });
+
     var updateDisplay = function () {
         $('#album_frame').empty();
         $('#song_frame').empty();
