@@ -1,6 +1,6 @@
 {
 	"name": "MediaServer",
-	"description": "One page webpage that controls mediastreamer",
+	"description": "Single page website that controls the gstreamer mediaserver",
 	"main": "./mediaserver.js",
 	"version": "0.0.1",
 	"author": {
