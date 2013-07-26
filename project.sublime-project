@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+        {
+            "name": "Node",
+            "path": "//PI/dev/nodejs/MediaServer",
+            "folder_exclude_patterns": ["node_modules"]
+        },
+        {
+            "name": "Gstreamer",
+            "path": "//PI/dev/gstreamer/MediaStreamer",
+            "folder_exclude_patterns": ["obj", "node_modules"]
+        }
+	]
+}
