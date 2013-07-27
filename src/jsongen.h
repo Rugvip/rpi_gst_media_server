@@ -3,14 +3,15 @@
 
 #include "pipeline.h"
 
-#include <glib.h>
-
 typedef struct {
-    gint duration;
-    gint position;
-} JSON_PlaybackInfo;
+    void *priv;
+} JsonPacket;
 
-void jsongen_playback_info(Client *client, JSON_PlaybackInfo *info);
-void jsongen_playback_start(Client *client, JSON_PlaybackInfo *info);
+JsonPacket *jsongen_playing(Client *)
+JsonPacket *jsongen_paused(Client *)
+JsonPacket *jsongen_time(Client *)
+JsonPacket *jsongen_info(Client *)
+
+void jsongen_send_packet(Client *, JsonPacket *);
 
 #endif /* jsongen_h */

@@ -2,6 +2,7 @@
 
 #include "pipeline.h"
 
+#include <glib.h>
 #include <json-glib/json-glib.h>
 
 static void write_json_response(GOutputStream *stream, JsonNode *root)
