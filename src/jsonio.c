@@ -8,11 +8,14 @@ void jsonio_read_request(Client *client)
 
     request = jsonparse_read_request(client);
 
-    if (request->type < 0) {
-        g_warning("Unknown request received\n");
-    } else {
-        handlers[request->type](client, request);
+    if (!request) {
+        g_warning("Null request received\n");
+        return;
     }
+
+    g_assert(request->type >= 0 && request-> < NUM_REQUEST_TYPES);
+
+    handlers[request->type](client, request);
 }
 
 void jsonio_set_request_handler(RequestType type, RequestHandler handler)

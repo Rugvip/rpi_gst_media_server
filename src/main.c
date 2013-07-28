@@ -30,34 +30,6 @@ void do_action_start(Client *client, JsonObject *root)
     }
 }
 
-void handle_json_request(Client *client, JsonNode *root)
-{
-    g_print("type: %s\n", json_node_type_name(root));
-    if (!root || JSON_NODE_TYPE(root) != JSON_NODE_OBJECT) {
-        g_warning("Invalid json received: root is not an object\n");
-    }
-
-    JsonObject *rootObject = json_node_get_object(root);
-
-    JsonNode *actionNode = json_object_get_member(rootObject, "action");
-
-    if (!actionNode) {
-        g_warning("Invalid json received: no action defined\n");
-    }
-    if (!JSON_NODE_HOLDS_VALUE(actionNode)) {
-        g_warning("Invalid json received: action is not a value\n");
-    }
-    if (json_node_get_value_type(actionNode) != G_TYPE_STRING) {
-        g_warning("Invalid json received: action is not a string\n");
-    }
-
-    const gchar *str = json_node_get_string(actionNode);
-    g_print("Action: %s\n", str);
-    if (!strncmp(str, "start", 6)) {
-        do_action_start(client, rootObject);
-    }
-}
-
 void async_client_connection_read(GObject *obj, GAsyncResult *res, Client *client)
 {
     GError *err = NULL;
