@@ -8,7 +8,7 @@ GST_CFLAGS=`pkg-config --cflags gstreamer-1.0`
 
 LIBS=`pkg-config --libs gstreamer-1.0 json-glib-1.0`
 
-OBJ=obj/main.o obj/pipeline.o obj/jsongen.o obj/jsonparse.o
+OBJ=obj/main.o obj/pipeline.o obj/jsongen.o obj/jsonparse.o obj/jsonio.o
 
 all: mediastreamer
 
@@ -26,6 +26,9 @@ obj/jsongen.o: src/jsongen.c src/jsongen.h
 
 obj/jsonparse.o: src/jsonparse.c src/jsonparse.h
 	$(CC) $(CFLAGS) $(GLIB_CFLAGS) -c src/jsonparse.c -o obj/jsonparse.o
+
+obj/jsonio.o: src/jsonio.c src/jsonio.h
+	$(CC) $(CFLAGS) $(GLIB_CFLAGS) -c src/jsonio.c -o obj/jsonio.o
 
 clean:
 	rm -rf obj/*

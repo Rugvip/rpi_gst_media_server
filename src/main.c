@@ -12,7 +12,7 @@ const gchar *MUSIC_DIR = "/home/rugvip/music";
 
 void do_action_start_callback(UserData *data)
 {
-    jsonio_playing(data->client, data->value, 0);
+    jsonio_send_packet(data->client, jsongen_playing((Song){NULL, NULL, NULL}, data->value, 0));
     g_free(data);
 }
 
@@ -42,7 +42,7 @@ void async_client_connection_read(GObject *obj, GAsyncResult *res, Client *clien
         client->buffer_len = len;
 
         if (len > CLIENT_BUFFER_SIZE / 2) {
-            g_print("Received buffer with size %d, DDOS!?\n", len);
+            g_print("Received buffer with size %ld, DDOS!?\n", len);
         }
 
         g_print("Buf %lu: %s\n", client->buffer_len, client->buffer);
@@ -62,13 +62,13 @@ void async_client_connection_read(GObject *obj, GAsyncResult *res, Client *clien
 
 void server_send_playback_status(Server *server)
 {
-    jsonio_broadcast_packet(server, jsongen_playing(get_position(), get_duration()));
+    jsonio_broadcast_packet(server, jsongen_playing((Song){NULL, NULL, NULL}, get_position(), get_duration()));
 }
 
 gboolean server_data_print_connections(Server *server)
 {
     gint i;
-    Client *clients = server->clients;
+    GPtrArray *clients = server->clients;
     gint len = server->clients->len;
 
     g_print("%d clients connected\n", len);
@@ -110,7 +110,6 @@ Client *client_data_new(Server *server, GSocketConnection *connection)
     client->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     client->connection_time = g_date_time_new_now_local();
     client->server = server;
-    client->buffer = g_malloc0(IN_BUFFER_SIZE);
 
     return client;
 }

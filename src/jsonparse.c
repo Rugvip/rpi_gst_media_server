@@ -1,44 +1,53 @@
 
 #include "jsonparse.h"
+#include "jsonio.h"
 
 #include "pipeline.h"
 
 #include <json-glib/json-glib.h>
+#include <string.h>
 
 
-RequestInfo *read_info_request(JsonObject *rootObject)
+Request *read_info_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
-RequestPlay *read_play_request(JsonObject *rootObject)
+Request *read_play_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
-RequestPause *read_pause_request(JsonObject *rootObject)
+Request *read_pause_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
-RequestNext *read_next_request(JsonObject *rootObject)
+Request *read_next_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
-RequestSeek *read_seek_request(JsonObject *rootObject)
+Request *read_seek_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
-RequestVolume *read_volume_request(JsonObject *rootObject)
+Request *read_volume_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
-RequestEq *read_eq_request(JsonObject *rootObject)
+Request *read_eq_request(JsonObject *rootObject)
 {
-
+    while (0) { (void) rootObject; }
+    return NULL;
 }
 
 
@@ -72,7 +81,7 @@ Request *jsonparse_read_request(Client *client)
             g_warning("Invalid json received: type is not a string\n");
         }
 
-        const gchar *str = json_node_get_string(actionNode);
+        const gchar *str = json_node_get_string(typeNode);
 
         if (!strncmp(str, "info", 5)) {
             request = read_info_request(rootObject);

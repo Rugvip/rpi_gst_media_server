@@ -1,5 +1,5 @@
-#ifndef jsonapi_h
-#define jsonapi_h
+#ifndef jsonio_h
+#define jsonio_h
 
 #include "pipeline.h"
 #include "jsongen.h"
@@ -15,7 +15,7 @@ typedef enum {
     REQUEST_VOLUME,
     REQUEST_EQ,
     NUM_REQUEST_TYPES,
-} RequestType
+} RequestType;
 
 typedef struct {
     RequestType type;
@@ -67,10 +67,10 @@ typedef struct {
 
 typedef void (*RequestHandler)(Request *);
 
-void jsonapi_read_request(Client *);
-void jsonapi_set_request_handler(RequestType, RequestHandler);
+void jsonio_read_request(Client *);
+void jsonio_set_request_handler(RequestType, RequestHandler);
 
-void jsongen_send_packet(Client *, JsonPacket *);
-void jsongen_broadcast_packet(Server *, JsonPacket *);
+void jsonio_send_packet(Client *, JsonPacket *);
+void jsonio_broadcast_packet(Server *, JsonPacket *);
 
-#endif /* jsonapi_h */
+#endif /* jsonio_h */

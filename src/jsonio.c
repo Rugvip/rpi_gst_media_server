@@ -1,4 +1,6 @@
 #include "jsonio.h"
+#include "jsonparse.h"
+#include "jsongen.h"
 
 static RequestHandler handlers[NUM_REQUEST_TYPES] = {NULL};
 
@@ -13,9 +15,7 @@ void jsonio_read_request(Client *client)
         return;
     }
 
-    g_assert(request->type >= 0 && request-> < NUM_REQUEST_TYPES);
-
-    handlers[request->type](client, request);
+    handlers[request->type](request);
 }
 
 void jsonio_set_request_handler(RequestType type, RequestHandler handler)
@@ -25,14 +25,14 @@ void jsonio_set_request_handler(RequestType type, RequestHandler handler)
 
 void jsonio_send_packet(Client *client, JsonPacket *packet)
 {
-    jsongen_write_packet(Client->out, packet);
+    jsongen_write_packet(client->out, packet);
     jsongen_free_packet(packet);
 }
 
 void jsonio_broadcast_packet(Server *server, JsonPacket *packet)
 {
     gint i;
-    Client *clients = server->clients;
+    GPtrArray *clients = server->clients;
     gint len = server->clients->len;
 
     for (i = 0; i < len; ++i) {

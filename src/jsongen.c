@@ -12,15 +12,9 @@
     json_builder_set_member_name(builder, name), value)
 #define add_int(builder, name, value) json_builder_add_int_value( \
     json_builder_set_member_name(builder, name), value)
-#define add_array(builder)
-#define add_int json_builder_add_int_value
-#define set_name json_builder_set_member_name
-
-json_builder_add_string_value(json_builder_set_member_name(builder,
-    "category"), "playback");
 
 typedef struct {
-
+    JsonBuilder *builder;
 } JsonPacketPrivate;
 
 void jsongen_write_packet(GOutputStream *out, JsonPacket *packet)
@@ -59,8 +53,7 @@ static JsonPacket *json_packet_new()
     packet = g_new0(JsonPacket, 1);
     packet->priv = g_new0(JsonPacketPrivate, 1);
 
-    builder = json_builder_new();
-    JSON_PACKET_PRIVATE(packet)->builder = builder;
+    JSON_PACKET_PRIVATE(packet)->builder = json_builder_new();
 
     return packet;
 }
@@ -87,6 +80,7 @@ JsonPacket *jsongen_playing(Song song, gint duration, gint position)
 JsonPacket *jsongen_paused(gint position)
 {
     JsonPacket *packet = json_packet_new();
+    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
 
     json_builder_begin_object(builder);
 
@@ -98,7 +92,7 @@ JsonPacket *jsongen_paused(gint position)
     return packet;
 }
 
-JsonPacket *jsongen_eq(gint gain[NUM_EQ_BANDS])
+JsonPacket *jsongen_eq(gint bands[NUM_EQ_BANDS])
 {
     int i;
     JsonPacket *packet = json_packet_new();
@@ -121,17 +115,25 @@ JsonPacket *jsongen_eq(gint gain[NUM_EQ_BANDS])
 
 JsonPacket *jsongen_volume(gint volume)
 {
-    JsonBuilder *builder = build_object();
+    JsonPacket *packet = json_packet_new();
+    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+
+    json_builder_begin_object(builder);
 
     add_string(builder, "type", "volume");
-    add_string(builder, "volume", volume);
+    add_int(builder, "volume", volume);
 
-    end_build_object(builder, client->out);
+    json_builder_end_object(builder);
+
+    return packet;
 }
 
 JsonPacket *jsongen_info(Song song, gint duration, gint position)
 {
-    JsonBuilder *builder = build_object();
+    JsonPacket *packet = json_packet_new();
+    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+
+    json_builder_begin_object(builder);
 
     add_string(builder, "type", "info");
     add_string(builder, "artist", song.artist);
@@ -140,5 +142,7 @@ JsonPacket *jsongen_info(Song song, gint duration, gint position)
     add_int(builder, "duration", duration);
     add_int(builder, "position", position);
 
-    end_build_object(builder, client->out);
+    json_builder_end_object(builder);
+
+    return packet;
 }
