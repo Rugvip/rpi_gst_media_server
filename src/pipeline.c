@@ -135,7 +135,7 @@ GstElement *eq;
     g_assert(eq);
     g_assert(sink);
 
-    const gchar *location = "/home/pi/music/Grendel/Best Of Grendel/Harsh Generation";
+    const gchar *location = "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation";
     /* we set the input filename to the source element */
     g_object_set(G_OBJECT(source), "location", location, NULL);
 

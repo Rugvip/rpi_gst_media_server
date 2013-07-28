@@ -7,6 +7,9 @@
 
 #define UNUSED(obj) while(0){(void)obj;}
 
+#define CLIENT(obj) ((Client *) (obj))
+#define SERVER(obj) ((Server *) (obj))
+
 void seek(gint ms);
 
 gint get_duration();
@@ -21,6 +24,15 @@ typedef void (*Callback) (UserData*);
 
 #define CALLBACK(func) ((Callback) func)
 
+#define NUM_EQ_BANDS 10
+#define CLIENT_BUFFER_SIZE 1024
+
+typedef struct {
+    gchar *artist;
+    gchar *album;
+    gchar *song;
+} Song;
+
 typedef struct {
     GPtrArray *clients;
     GDateTime *server_start_time;
@@ -34,7 +46,7 @@ typedef struct {
     guint remote_port;
     GDateTime *connection_time;
     Server *server;
-    gchar *buffer;
+    gchar buffer[CLIENT_BUFFER_SIZE];
     gssize buffer_len;
 } Client;
 

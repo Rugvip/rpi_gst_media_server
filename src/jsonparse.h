@@ -3,17 +3,6 @@
 
 #include "pipeline.h"
 
-#include <glib.h>
-
-typedef enum {
-
-} RequestType
-
-typedef struct {
-    gint duration;
-    gint position;
-} ClientRequest;
-
-ClientRequest *jsonparse_play_request(Client *client);
+Request *jsonparse_read_request(Client *client);
 
 #endif /* jsonparse_h */
