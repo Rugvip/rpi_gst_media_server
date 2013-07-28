@@ -8,7 +8,7 @@ var app  = require('http').createServer(requestHandler)
 
 require('colors');
 
-var MUSIC_DIR = '/home/pi/music'
+var MUSIC_DIR = process.env.HOME + '/music'
 var PORT = 80;
 
 var db = {};
@@ -88,7 +88,7 @@ var getTable = {
     '/play': function (req, res) {
         mediaServerRequest({
             action: 'start',
-            file: "/home/pi/music/Daft Punk/Random Access Memories/Contact"
+            file: MUSIC_DIR + "/Daft Punk/Random Access Memories/Contact"
         });
     },
     '/seek': function (req, res) {
