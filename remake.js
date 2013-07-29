@@ -27,10 +27,7 @@ var remake = (function () {
 
         make.stdout.pipe(process.stdout);
         make.stderr.pipe(process.stderr);
-/*        make.stderr.on('data', function (d) {
-            console.log("Dataz: " + d);
-        });
-*/
+
         make.on('exit', function (code, signal) {
             make = null;
             if (!code && !signal) {
@@ -43,6 +40,8 @@ var remake = (function () {
                     detached: true,
                     stdio: ['ignore', process.stdout, process.stderr]
                 });
+                server.stdout.pipe(process.stdout);
+                server.stderr.pipe(process.stderr);
             } else {
                 console.log("Make completed (%d) [%s]".red, code, signal);
             }

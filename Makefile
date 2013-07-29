@@ -10,10 +10,10 @@ LIBS=`pkg-config --libs gstreamer-1.0 json-glib-1.0`
 
 OBJ=obj/main.o obj/pipeline.o obj/jsongen.o obj/jsonparse.o obj/jsonio.o
 
-all: mediastreamer
+all: mediaserver
 
-mediastreamer: $(OBJ)
-	$(CC) $(LDFLAGS) -o mediastreamer $(OBJ) $(LIBS)
+mediaserver: $(OBJ)
+	$(CC) $(LDFLAGS) -o mediaserver $(OBJ) $(LIBS)
 
 obj/main.o: src/main.c src/pipeline.h
 	$(CC) $(CFLAGS) $(GLIB_CFLAGS) -c src/main.c -o obj/main.o
