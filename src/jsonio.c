@@ -11,11 +11,12 @@ void jsonio_read_request(Client *client)
     request = jsonparse_read_request(client);
 
     if (!request) {
-        g_warning("Null request received\n");
         return;
     }
 
     handlers[request->type](request);
+
+    g_free(request);
 }
 
 void jsonio_set_request_handler(RequestType type, RequestHandler handler)

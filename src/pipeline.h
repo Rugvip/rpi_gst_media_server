@@ -28,9 +28,9 @@ typedef void (*Callback) (UserData*);
 #define CLIENT_BUFFER_SIZE 1024
 
 typedef struct {
-    gchar *artist;
-    gchar *album;
-    gchar *song;
+    const gchar *artist;
+    const gchar *album;
+    const gchar *song;
 } Song;
 
 typedef struct {

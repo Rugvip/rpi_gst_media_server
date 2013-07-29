@@ -12,6 +12,8 @@
     json_builder_set_member_name(builder, name), value)
 #define add_int(builder, name, value) json_builder_add_int_value( \
     json_builder_set_member_name(builder, name), value)
+#define add_double(builder, name, value) json_builder_add_double_value( \
+    json_builder_set_member_name(builder, name), value)
 
 typedef struct {
     JsonBuilder *builder;
@@ -92,7 +94,7 @@ JsonPacket *jsongen_paused(gint position)
     return packet;
 }
 
-JsonPacket *jsongen_eq(gint bands[NUM_EQ_BANDS])
+JsonPacket *jsongen_eq(gdouble bands[NUM_EQ_BANDS])
 {
     int i;
     JsonPacket *packet = json_packet_new();
@@ -104,7 +106,7 @@ JsonPacket *jsongen_eq(gint bands[NUM_EQ_BANDS])
 
     json_builder_begin_array(json_builder_set_member_name(builder, "bands"));
     for (i = 0; i < NUM_EQ_BANDS; ++i) {
-        json_builder_add_int_value(builder, bands[i]);
+        json_builder_add_double_value(builder, bands[i]);
     }
     json_builder_end_array(builder);
 
@@ -113,7 +115,7 @@ JsonPacket *jsongen_eq(gint bands[NUM_EQ_BANDS])
     return packet;
 }
 
-JsonPacket *jsongen_volume(gint volume)
+JsonPacket *jsongen_volume(gdouble volume)
 {
     JsonPacket *packet = json_packet_new();
     JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
@@ -121,7 +123,7 @@ JsonPacket *jsongen_volume(gint volume)
     json_builder_begin_object(builder);
 
     add_string(builder, "type", "volume");
-    add_int(builder, "volume", volume);
+    add_double(builder, "volume", volume);
 
     json_builder_end_object(builder);
 

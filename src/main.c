@@ -10,6 +10,52 @@
 
 const gchar *MUSIC_DIR = "/home/rugvip/music";
 
+void handle_info_request(RequestInfo *request)
+{
+    UNUSED(request);
+    g_print("Got info request\n");
+}
+
+void handle_play_request(RequestPlay *request)
+{
+    g_print("Got play request %s %s %s %ld\n", request->song.artist
+        , request->song.album, request->song.song, request->time);
+}
+
+void handle_pause_request(RequestPause *request)
+{
+    g_print("Got pause request %ld\n", request->time);
+}
+
+void handle_next_request(RequestNext *request)
+{
+    g_print("Got next request %s %s %s %ld\n", request->song.artist
+        , request->song.album, request->song.song, request->time);
+}
+
+void handle_seek_request(RequestSeek *request)
+{
+    g_print("Got seek request %ld\n", request->time);
+}
+
+void handle_volume_request(RequestVolume *request)
+{
+    g_print("Got volume request %f\n", request->volume);
+}
+
+void handle_eq_request(RequestEq *request)
+{
+    gint i;
+    g_print("Got eq request");
+
+    for (i = 0; i < NUM_EQ_BANDS; ++i) {
+        g_print(" %3.2f", request->bands[i]);
+    }
+
+    g_print("\n");
+}
+
+
 void do_action_start_callback(UserData *data)
 {
     jsonio_send_packet(data->client, jsongen_playing((Song){NULL, NULL, NULL}, data->value, 0));
@@ -44,8 +90,6 @@ void async_client_connection_read(GObject *obj, GAsyncResult *res, Client *clien
         if (len > CLIENT_BUFFER_SIZE / 2) {
             g_print("Received buffer with size %ld, DDOS!?\n", len);
         }
-
-        g_print("Buf %lu: %s\n", client->buffer_len, client->buffer);
 
         jsonio_read_request(client);
 
@@ -188,6 +232,14 @@ void setup_server(Server *server)
 
     service = g_socket_service_new();
     g_assert(service);
+
+    jsonio_set_request_handler(REQUEST_INFO,   REQUEST_HANDLER(handle_info_request));
+    jsonio_set_request_handler(REQUEST_PLAY,   REQUEST_HANDLER(handle_play_request));
+    jsonio_set_request_handler(REQUEST_PAUSE,  REQUEST_HANDLER(handle_pause_request));
+    jsonio_set_request_handler(REQUEST_NEXT,   REQUEST_HANDLER(handle_next_request));
+    jsonio_set_request_handler(REQUEST_SEEK,   REQUEST_HANDLER(handle_seek_request));
+    jsonio_set_request_handler(REQUEST_VOLUME, REQUEST_HANDLER(handle_volume_request));
+    jsonio_set_request_handler(REQUEST_EQ,     REQUEST_HANDLER(handle_eq_request));
 
     g_socket_listener_add_inet_port(G_SOCKET_LISTENER(service), PORT, NULL, &error);
     g_signal_connect(service, "incoming", G_CALLBACK(on_client_connected), server);

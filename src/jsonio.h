@@ -31,41 +31,42 @@ typedef struct {
 typedef struct {
     Request request;
     Song song;
-    gint time;
+    gint64 time;
 } RequestPlay;
 
 /* Pause the playing song and seek to time */
 typedef struct {
     Request request;
-    gint time;
+    gint64 time;
 } RequestPause;
 
 /* The next song to be played */
 typedef struct {
     Request request;
     Song song;
-    gint time;
+    gint64 time;
 } RequestNext;
 
 /* Seek to a specific time */
 typedef struct {
     Request request;
-    gint time;
+    gint64 time;
 } RequestSeek;
 
 /* Set volume */
 typedef struct {
     Request request;
-    gint volume;
+    gdouble volume;
 } RequestVolume;
 
 /* Set equalizer settings */
 typedef struct {
     Request request;
-    gfloat bands[NUM_EQ_BANDS];
+    gdouble bands[NUM_EQ_BANDS];
 } RequestEq;
 
 typedef void (*RequestHandler)(Request *);
+#define REQUEST_HANDLER(obj) ((RequestHandler) (obj))
 
 void jsonio_read_request(Client *);
 void jsonio_set_request_handler(RequestType, RequestHandler);
