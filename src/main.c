@@ -18,7 +18,7 @@ void handle_info_request(RequestInfo *request)
 
 void handle_play_request(RequestPlay *request)
 {
-    g_print("Got play request %s %s %s %ld\n", request->song.artist
+    g_print("Got play request %s/%s/%s %ld\n", request->song.artist
         , request->song.album, request->song.song, request->time);
 }
 

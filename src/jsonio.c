@@ -7,8 +7,10 @@ static RequestHandler handlers[NUM_REQUEST_TYPES] = {NULL};
 void jsonio_read_request(Client *client)
 {
     Request *request;
+    JsonParser *parser;
 
-    request = jsonparse_read_request(client);
+    parser = json_parser_new();
+    request = jsonparse_read_request(client, parser);
 
     if (!request) {
         return;
@@ -16,6 +18,7 @@ void jsonio_read_request(Client *client)
 
     handlers[request->type](request);
 
+    g_object_unref(G_OBJECT(parser));
     g_free(request);
 }
 
