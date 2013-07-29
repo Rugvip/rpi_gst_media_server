@@ -1,8 +1,11 @@
 var net = require('net');
 
 var testObj = {
-    action: "start",
-    file: "/home/pi/music/Daft_Punk/Random_Access_Memories/Contact"
+    type: "play",
+    artist: "Daft_Punk",
+    album: "Random_Access_Memories",
+    song: "Contact",
+    time: 2
 }
 
 var socket = net.createConnection(3264);
