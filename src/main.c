@@ -182,6 +182,8 @@ void setup_server(Server *server, gint port)
     g_signal_connect(service, "incoming", G_CALLBACK(on_client_connected), server);
     g_socket_service_start(service);
 
+    player_init(server->player);
+
     if (error) {
         g_error("Error setting up server: %s\n", error->message);
     }

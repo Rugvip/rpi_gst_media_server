@@ -37,7 +37,7 @@ typedef struct _Song Song;
 typedef struct _JsonPacket JsonPacket;
 typedef struct _Request Request;
 
-typedef void (*RequestHandler)(Server *, Request *);
+typedef void (*RequestHandler)(Request *);
 
 struct _JsonPacket {
     void *priv;

@@ -9,10 +9,11 @@ void jsonio_read_request(Client *client)
     request = jsonparse_read_request(client, parser);
 
     if (!request) {
+        g_object_unref(G_OBJECT(parser));
         return;
     }
 
-    client->server->handlers[request->type](client->server, request);
+    client->server->handlers[request->type](request);
 
     g_object_unref(G_OBJECT(parser));
     g_free(request);

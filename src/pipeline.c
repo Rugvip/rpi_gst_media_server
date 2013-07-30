@@ -85,7 +85,7 @@ gboolean player_set_song(Player *player, Song song)
         g_free(path);
         return FALSE;
     }
-    g_timeout_add(100, (GSourceFunc)timeout_duration_query, player->server);
+    g_timeout_add(10, (GSourceFunc)timeout_duration_query, player->server);
     g_print("Now playing: %s\n", path);
 
     g_free(path);
@@ -102,9 +102,9 @@ void handle_info_request(RequestInfo *request)
 void handle_play_request(RequestPlay *request)
 {
     g_print("Got play request %s/%s/%s %ld\n", request->song.artist
-        , request->song.album, request->song.name, request->time);
+        ,request->song.album, request->song.name, request->time);
 
-    if (!player_set_song(request->request.client->server->player, request->song)) {
+    if (!player_set_song(request->request.client->server->player , request->song)) {
         g_warning("Error handling request\n");
     }
 }
@@ -203,9 +203,11 @@ static void mp3_source_init(MP3Source *src)
     g_assert(src->bin);
 
     gst_bin_add_many(GST_BIN(src->bin), src->filesrc, src->parser, src->decoder, NULL);
+    gst_element_link_many(src->filesrc, src->parser, src->decoder, NULL);
 
-    g_object_set(G_OBJECT(src->filesrc), "location",
-        "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation", NULL);
+    GstPad *pad = gst_element_get_static_pad(src->decoder, "src");
+    gst_element_add_pad(src->bin, gst_ghost_pad_new("src", pad));
+    gst_object_unref(GST_OBJECT (pad));
 }
 
 void player_init(Player *player)
@@ -214,6 +216,7 @@ void player_init(Player *player)
 
     char *args[] = {
         "mp3net",
+        "--gst-debug-no-color",
         "--gst-debug-level=3"
     };
     char **argv = args;
@@ -234,16 +237,6 @@ void player_init(Player *player)
 
     mp3_source_init(player->mp3source);
 
-    g_object_set(G_OBJECT(player->volume), "volume", 2.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band0", 4.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band1", 3.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band2", 2.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band3", 1.0, NULL);
-
-    bus = gst_pipeline_get_bus(GST_PIPELINE(player->pipeline));
-    player->bus_watch_id = gst_bus_add_watch(bus, (GstBusFunc) bus_call, player);
-    gst_object_unref(bus);
-
     gst_bin_add_many(GST_BIN(player->pipeline),
         player->mp3source->bin,
         player->volume,
@@ -251,14 +244,27 @@ void player_init(Player *player)
         player->sink,
         NULL);
 
-    gst_element_link_many(player->pipeline,
+    gst_element_link_many(
         player->mp3source->bin,
         player->volume,
         player->equalizer,
         player->sink,
         NULL);
 
-    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+    bus = gst_pipeline_get_bus(GST_PIPELINE(player->pipeline));
+    player->bus_watch_id = gst_bus_add_watch(bus, (GstBusFunc) bus_call, player);
+    gst_object_unref(bus);
+
+    g_object_set(G_OBJECT(player->volume), "volume", 2.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band0", 4.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band1", 3.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band2", 2.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band3", 1.0, NULL);
+
+    g_object_set(G_OBJECT(player->mp3source->filesrc), "location",
+        "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation", NULL);
+
+    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 }
 
 void player_start(Player *player)
