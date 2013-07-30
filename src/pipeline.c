@@ -50,8 +50,9 @@ void player_set_position(Player *player, gint ms)
 
 static gboolean timeout_duration_query(Server *server)
 {
+    static int i = 0;
     gint64 duration = player_get_duration(server->player);
-    g_print("testtimeout\n");
+    g_print("testtimeout %d\n", ++i);
     if (duration < 0) {
         return TRUE;
     }
