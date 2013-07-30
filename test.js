@@ -2,8 +2,8 @@ var net = require('net');
 
 var testObj = {
     type: "play",
-    artist: "Daft_Punk",
-    album: "Random_Access_Memories",
+    artist: "Daft Punk",
+    album: "Random Access Memories",
     song: "Contact",
     time: 2
 }
