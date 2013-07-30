@@ -1,18 +1,34 @@
 var net = require('net');
 
-var testObj = {
+var contact = {
     type: "play",
     artist: "Daft Punk",
     album: "Random Access Memories",
     song: "Contact",
-    time: 2
+    time: 0
+}
+
+var gonzo = {
+    type: "play",
+    artist: "Youtube Mixes",
+    album: "Hardcore",
+    song: "DJ Gonzo 1.mp3",
+    time: 0
+}
+
+var snow = {
+    type: "play",
+    artist: "Youtube Mixes",
+    album: "Industrial",
+    song: "Snow Styler VI",
+    time: 0
 }
 
 var socket = net.createConnection(3264);
 socket.setEncoding('ascii');
 
 socket.on('connect', function () {
-    socket.write(JSON.stringify(testObj));
+    socket.write(JSON.stringify(gonzo));
     socket.end();
 });
 
