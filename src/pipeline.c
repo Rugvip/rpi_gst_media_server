@@ -1,10 +1,8 @@
 #include "pipeline.h"
 
-#include <gst/gst.h>
+const gchar *const MUSIC_DIR = "/home/rugvip/music";
 
-GstElement *pipeline, *source, *parser, *decoder, *volume, *sink;
-
-gint get_duration()
+gint64 player_get_duration(Player *player)
 {
     static GstQuery *query = NULL;
 
@@ -12,7 +10,7 @@ gint get_duration()
         query = gst_query_new_duration(GST_FORMAT_TIME);
     }
 
-    if (gst_element_query(parser, query)) {
+    if (gst_element_query(player->mp3source->parser, query)) {
         gint64 duration;
         gst_query_parse_duration(query, NULL, &duration);
         return GST_TIME_AS_MSECONDS(duration);
@@ -21,64 +19,137 @@ gint get_duration()
     }
 }
 
-gint get_position()
+gint64 player_get_position(Player *player)
 {
-    gint64 position = -1;
-    if (gst_element_query_position(parser, GST_FORMAT_TIME, &position)) {
-        return (gint) GST_TIME_AS_MSECONDS(position);
+    static GstQuery *query = NULL;
+
+    if (!query) {
+        query = gst_query_new_position(GST_FORMAT_TIME);
+    }
+
+    if (gst_element_query(player->mp3source->parser, query)) {
+        gint64 position;
+        gst_query_parse_position(query, NULL, &position);
+        return GST_TIME_AS_MSECONDS(position);
     } else {
         return -1;
     }
 }
 
-void set_position(gint ms)
+void player_set_position(Player *player, gint ms)
 {
-    if(!gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, ms * GST_MSECOND)) {
-        g_warning("seek failed");
-    } else {
+    gboolean ret;
+
+    ret = gst_element_seek_simple(player->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, ms * GST_MSECOND);
+    if(ret) {
         g_print("seek done.");
+    } else {
+        g_warning("seek failed");
     }
 }
 
-gboolean timeout_duration_query(UserData *data)
+static gboolean timeout_duration_query(Server *server)
 {
-    gint duration = get_duration();
+    gint64 duration = player_get_duration(server->player);
+    g_print("testtimeout\n");
     if (duration < 0) {
         return TRUE;
-    } else {
-        data->value = duration;
-        data->callback(data);
-        return FALSE;
     }
+
+    JsonPacket *packet;
+    gint64 position;
+
+    position = player_get_position(server->player);
+
+    position = position < 0 ? 0 : position;
+
+    packet = jsongen_playing(server->player->mp3source->song, duration, position);
+    jsonio_broadcast_packet(server, packet);
+
+    return FALSE;
 }
 
-gboolean play_file(const gchar *path, UserData *data)
+gboolean player_set_song(Player *player, Song song)
 {
     GstStateChangeReturn ret;
-    gst_element_set_state(pipeline, GST_STATE_NULL);
-    g_object_set(G_OBJECT(source), "location", path, NULL);
-    ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(player->pipeline, GST_STATE_NULL); // FIXME: Needed?
+
+    gchar *path;
+
+    path = g_build_filename(MUSIC_DIR, song.artist, song.album, song.name, NULL);
+
+    g_object_set(G_OBJECT(player->mp3source->filesrc), "location", path, NULL);
+    ret = gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_warning("State change failed");
-
+        g_free(path);
+        return FALSE;
     }
-    g_timeout_add(100, (GSourceFunc)timeout_duration_query, data);
+    g_timeout_add(100, (GSourceFunc)timeout_duration_query, player->server);
     g_print("Now playing: %s\n", path);
+
+    g_free(path);
+
     return TRUE;
 }
 
-static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
+void handle_info_request(RequestInfo *request)
 {
-    GMainLoop *loop = (GMainLoop *) data;
+    UNUSED(request);
+    g_print("Got info request\n");
+}
 
-    UNUSED(loop);
+void handle_play_request(RequestPlay *request)
+{
+    g_print("Got play request %s/%s/%s %ld\n", request->song.artist
+        , request->song.album, request->song.name, request->time);
+
+    if (!player_set_song(request->request.client->server->player, request->song)) {
+        g_warning("Error handling request\n");
+    }
+}
+
+void handle_pause_request(RequestPause *request)
+{
+    g_print("Got pause request %ld\n", request->time);
+}
+
+void handle_next_request(RequestNext *request)
+{
+    g_print("Got next request %s %s %s %ld\n", request->song.artist
+        , request->song.album, request->song.name, request->time);
+}
+
+void handle_seek_request(RequestSeek *request)
+{
+    g_print("Got seek request %ld\n", request->time);
+}
+
+void handle_volume_request(RequestVolume *request)
+{
+    g_print("Got volume request %f\n", request->volume);
+}
+
+void handle_eq_request(RequestEq *request)
+{
+    gint i;
+    g_print("Got eq request");
+
+    for (i = 0; i < NUM_EQ_BANDS; ++i) {
+        g_print(" %3.2f", request->bands[i]);
+    }
+
+    g_print("\n");
+}
+
+static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
+{
     UNUSED(bus);
 
     switch (GST_MESSAGE_TYPE(msg)) {
-
     case GST_MESSAGE_EOS:
         g_print("End of stream\n");
-        gst_element_set_state(pipeline, GST_STATE_PAUSED);
+        gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
         break;
 
     case GST_MESSAGE_ERROR: {
@@ -99,13 +170,47 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
     return TRUE;
 }
 
-void start()
+static MP3Source *mp3_source_new()
 {
-    GMainLoop *loop;
+    MP3Source *source;
 
+    source = g_new0(MP3Source, 1);
+
+    return source;
+}
+
+Player *player_new(Server *server)
+{
+    Player *player;
+
+    player = g_new0(Player, 1);
+
+    player->mp3source = mp3_source_new();
+    player->server = server;
+
+    return player;
+}
+
+static void mp3_source_init(MP3Source *src)
+{
+    src->filesrc = gst_element_factory_make("filesrc"        , "file-src");
+    g_assert(src->filesrc);
+    src->parser  = gst_element_factory_make("mpegaudioparse" , "mpeg-audio-parser");
+    g_assert(src->parser);
+    src->decoder = gst_element_factory_make("mpg123audiodec" , "mpeg-audio-decoder");
+    g_assert(src->decoder);
+    src->bin = gst_bin_new("mp3-src-bin");
+    g_assert(src->bin);
+
+    gst_bin_add_many(GST_BIN(src->bin), src->filesrc, src->parser, src->decoder, NULL);
+
+    g_object_set(G_OBJECT(src->filesrc), "location",
+        "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation", NULL);
+}
+
+void player_init(Player *player)
+{
     GstBus *bus;
-    guint bus_watch_id;
-
 
     char *args[] = {
         "mp3net",
@@ -114,60 +219,58 @@ void start()
     char **argv = args;
     int argc = sizeof(args)/sizeof(gchar *);
 
-    g_print("count: %d\n", argc);
     gst_init(&argc, &argv);
-    loop = g_main_loop_new(NULL, FALSE);
-GstElement *eq;
-    /* Create gstreamer elements */
-    pipeline = gst_pipeline_new("mp3-player");
-    source   = gst_element_factory_make("filesrc"        , "file-source");
-    parser   = gst_element_factory_make("mpegaudioparse" , "mpeg-parse");
-    decoder  = gst_element_factory_make("mpg123audiodec" , "mad");
-    volume   = gst_element_factory_make("volume"         , "volume");
-    eq   = gst_element_factory_make("equalizer-10bands"         , "eq");
-    sink     = gst_element_factory_make("alsasink"       , "alsa-sink");
 
-    g_assert(pipeline);
-    g_assert(source);
-    g_assert(parser);
-    g_assert(decoder);
-    g_assert(volume);
-    g_assert(eq);
-    g_assert(sink);
+    player->main_loop = g_main_loop_new(NULL, FALSE);
 
-    const gchar *location = "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation";
-    /* we set the input filename to the source element */
-    g_object_set(G_OBJECT(source), "location", location, NULL);
+    player->pipeline  = gst_pipeline_new("mediaplayer");
+    g_assert(player->pipeline);
+    player->volume    = gst_element_factory_make("volume" , "volume");
+    g_assert(player->volume);
+    player->equalizer = gst_element_factory_make("equalizer-10bands" , "equalizer");
+    g_assert(player->equalizer);
+    player->sink      = gst_element_factory_make("alsasink" , "alsa-sink");
+    g_assert(player->sink);
 
-    g_object_set(G_OBJECT(volume), "volume", 1.0, NULL);
-    g_object_set(G_OBJECT(eq), "band0", 4.0, NULL);
-    g_object_set(G_OBJECT(eq), "band1", 3.0, NULL);
-    g_object_set(G_OBJECT(eq), "band2", 2.0, NULL);
-    g_object_set(G_OBJECT(eq), "band3", 1.0, NULL);
+    mp3_source_init(player->mp3source);
 
-    /* we add a message handler */
-    bus = gst_pipeline_get_bus(GST_PIPELINE (pipeline));
-    bus_watch_id = gst_bus_add_watch(bus, bus_call, loop);
+    g_object_set(G_OBJECT(player->volume), "volume", 2.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band0", 4.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band1", 3.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band2", 2.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band3", 1.0, NULL);
+
+    bus = gst_pipeline_get_bus(GST_PIPELINE(player->pipeline));
+    player->bus_watch_id = gst_bus_add_watch(bus, (GstBusFunc) bus_call, player);
     gst_object_unref(bus);
 
-    /* we add all elements into the pipeline */
-    gst_bin_add_many(GST_BIN(pipeline), source, parser, decoder, volume, eq, sink, NULL);
+    gst_bin_add_many(GST_BIN(player->pipeline),
+        player->mp3source->bin,
+        player->volume,
+        player->equalizer,
+        player->sink,
+        NULL);
 
-    /* we link the elements together */
-    gst_element_link_many(source, parser, decoder, volume, eq, sink, NULL);
+    gst_element_link_many(player->pipeline,
+        player->mp3source->bin,
+        player->volume,
+        player->equalizer,
+        player->sink,
+        NULL);
 
-    /* Set the pipeline to "playing" state*/
-    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+}
 
-    /* Iterate */
+void player_start(Player *player)
+{
     g_print("Running...\n");
-    g_main_loop_run(loop);
+    g_main_loop_run(player->main_loop);
 
-    /* Out of the main loop, clean up nicely */
     g_print("Returned, stopping playback\n");
+    gst_element_set_state(player->pipeline, GST_STATE_NULL);
 
     g_print("Deleting pipeline\n");
-    gst_object_unref(GST_OBJECT(pipeline));
-    g_source_remove(bus_watch_id);
-    g_main_loop_unref(loop);
+    gst_object_unref(GST_OBJECT(player->pipeline));
+    g_source_remove(player->bus_watch_id);
+    g_main_loop_unref(player->main_loop);
 }

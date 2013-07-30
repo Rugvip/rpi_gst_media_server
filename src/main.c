@@ -1,80 +1,11 @@
-#include "pipeline.h"
 
-#include "jsonio.h"
+#include "pipeline.h"
 
 #include <string.h>
 #include <json-glib/json-glib.h>
 
 #define PORT 3264
 #define IN_BUFFER_SIZE 1024
-
-const gchar *MUSIC_DIR = "/home/rugvip/music";
-
-void handle_info_request(RequestInfo *request)
-{
-    UNUSED(request);
-    g_print("Got info request\n");
-}
-
-void handle_play_request(RequestPlay *request)
-{
-    g_print("Got play request %s/%s/%s %ld\n", request->song.artist
-        , request->song.album, request->song.song, request->time);
-}
-
-void handle_pause_request(RequestPause *request)
-{
-    g_print("Got pause request %ld\n", request->time);
-}
-
-void handle_next_request(RequestNext *request)
-{
-    g_print("Got next request %s %s %s %ld\n", request->song.artist
-        , request->song.album, request->song.song, request->time);
-}
-
-void handle_seek_request(RequestSeek *request)
-{
-    g_print("Got seek request %ld\n", request->time);
-}
-
-void handle_volume_request(RequestVolume *request)
-{
-    g_print("Got volume request %f\n", request->volume);
-}
-
-void handle_eq_request(RequestEq *request)
-{
-    gint i;
-    g_print("Got eq request");
-
-    for (i = 0; i < NUM_EQ_BANDS; ++i) {
-        g_print(" %3.2f", request->bands[i]);
-    }
-
-    g_print("\n");
-}
-
-
-void do_action_start_callback(UserData *data)
-{
-    jsonio_send_packet(data->client, jsongen_playing((Song){NULL, NULL, NULL}, data->value, 0));
-    g_free(data);
-}
-
-void do_action_start(Client *client, JsonObject *root)
-{
-    JsonNode *fileNode = json_object_get_member(root, "file");
-
-    UserData *data = g_new0(UserData, 1);
-    data->client = client;
-    data->callback =  do_action_start_callback;
-    data->data = root;
-
-    if (fileNode && json_node_get_value_type(fileNode) == G_TYPE_STRING) {
-        play_file(json_node_get_string(fileNode), data);
-    }
-}
 
 void async_client_connection_read(GObject *obj, GAsyncResult *res, Client *client)
 {
@@ -106,10 +37,14 @@ void async_client_connection_read(GObject *obj, GAsyncResult *res, Client *clien
 
 void server_send_playback_status(Server *server)
 {
-    jsonio_broadcast_packet(server, jsongen_playing((Song){NULL, NULL, NULL}, get_position(), get_duration()));
+    JsonPacket *packet;
+
+    packet = jsongen_playing(server->player->mp3source->song,
+        player_get_position(server->player), player_get_duration(server->player));
+    jsonio_broadcast_packet(server, packet);
 }
 
-gboolean server_data_print_connections(Server *server)
+gboolean server_print_connections(Server *server)
 {
     gint i;
     GPtrArray *clients = server->clients;
@@ -124,7 +59,7 @@ gboolean server_data_print_connections(Server *server)
     return TRUE;
 }
 
-Client *client_data_new(Server *server, GSocketConnection *connection)
+Client *client_new(Server *server, GSocketConnection *connection)
 {
     GError *error = NULL;
     Client *client;
@@ -169,7 +104,7 @@ gboolean on_client_connected(GSocketService    *service,
     UNUSED(source_object);
 
     g_object_ref(G_OBJECT(connection));
-    client = client_data_new(server, connection);
+    client = client_new(server, connection);
     g_ptr_array_add(server->clients, client);
 
     g_input_stream_read_async(client->in, client->buffer, IN_BUFFER_SIZE, G_PRIORITY_DEFAULT,
@@ -177,7 +112,7 @@ gboolean on_client_connected(GSocketService    *service,
     return TRUE;
 }
 
-void on_client_data_connection_closed(GSocketConnection *connection,
+void on_client_connection_closed(GSocketConnection *connection,
     GAsyncResult *result, Client *client)
 {
     GError *error;
@@ -204,28 +139,30 @@ void on_client_data_connection_closed(GSocketConnection *connection,
     g_date_time_unref(client->connection_time);
 }
 
-void client_data_free(Client *client)
+void client_free(Client *client)
 {
     g_io_stream_close_async(G_IO_STREAM(client->connection), G_PRIORITY_DEFAULT,
-        NULL, (GAsyncReadyCallback) on_client_data_connection_closed, client);
+        NULL, (GAsyncReadyCallback) on_client_connection_closed, client);
 }
 
-Server *server_data_new()
+Server *server_new()
 {
     Server *server;
 
     server = g_new0(Server, 1);
 
     server->clients = g_ptr_array_sized_new(10);
-    g_ptr_array_set_free_func(server->clients, (GDestroyNotify) client_data_free);
+    g_ptr_array_set_free_func(server->clients, (GDestroyNotify) client_free);
     g_assert(server->clients);
 
     server->server_start_time = g_date_time_new_now_local();
 
+    server->player = player_new(server);
+
     return server;
 }
 
-void setup_server(Server *server)
+void setup_server(Server *server, gint port)
 {
     GError *error = NULL;
     GSocketService *service;
@@ -233,15 +170,15 @@ void setup_server(Server *server)
     service = g_socket_service_new();
     g_assert(service);
 
-    jsonio_set_request_handler(REQUEST_INFO,   REQUEST_HANDLER(handle_info_request));
-    jsonio_set_request_handler(REQUEST_PLAY,   REQUEST_HANDLER(handle_play_request));
-    jsonio_set_request_handler(REQUEST_PAUSE,  REQUEST_HANDLER(handle_pause_request));
-    jsonio_set_request_handler(REQUEST_NEXT,   REQUEST_HANDLER(handle_next_request));
-    jsonio_set_request_handler(REQUEST_SEEK,   REQUEST_HANDLER(handle_seek_request));
-    jsonio_set_request_handler(REQUEST_VOLUME, REQUEST_HANDLER(handle_volume_request));
-    jsonio_set_request_handler(REQUEST_EQ,     REQUEST_HANDLER(handle_eq_request));
+    jsonio_set_request_handler(server, REQUEST_INFO,   REQUEST_HANDLER(handle_info_request));
+    jsonio_set_request_handler(server, REQUEST_PLAY,   REQUEST_HANDLER(handle_play_request));
+    jsonio_set_request_handler(server, REQUEST_PAUSE,  REQUEST_HANDLER(handle_pause_request));
+    jsonio_set_request_handler(server, REQUEST_NEXT,   REQUEST_HANDLER(handle_next_request));
+    jsonio_set_request_handler(server, REQUEST_SEEK,   REQUEST_HANDLER(handle_seek_request));
+    jsonio_set_request_handler(server, REQUEST_VOLUME, REQUEST_HANDLER(handle_volume_request));
+    jsonio_set_request_handler(server, REQUEST_EQ,     REQUEST_HANDLER(handle_eq_request));
 
-    g_socket_listener_add_inet_port(G_SOCKET_LISTENER(service), PORT, NULL, &error);
+    g_socket_listener_add_inet_port(G_SOCKET_LISTENER(service), port, NULL, &error);
     g_signal_connect(service, "incoming", G_CALLBACK(on_client_connected), server);
     g_socket_service_start(service);
 
@@ -259,14 +196,14 @@ int main(int argc, const char *argv[])
 
     Server *server;
 
-    server = server_data_new();
+    server = server_new();
 
-    setup_server(server);
+    setup_server(server, PORT);
 
-    g_timeout_add(60000, (GSourceFunc) server_data_print_connections, server);
+    g_timeout_add(60000, (GSourceFunc) server_print_connections, server);
 
     g_timeout_add(10000, (GSourceFunc) server_send_playback_status, server);
 
-    start();
+    player_start(server->player);
     return 0;
 }

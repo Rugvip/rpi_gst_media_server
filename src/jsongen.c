@@ -70,7 +70,7 @@ JsonPacket *jsongen_playing(Song song, gint duration, gint position)
     add_string(builder, "type", "played");
     add_string(builder, "artist", song.artist);
     add_string(builder, "album", song.album);
-    add_string(builder, "song", song.song);
+    add_string(builder, "song", song.name);
     add_int(builder, "duration", duration);
     add_int(builder, "position", position);
 
@@ -140,7 +140,7 @@ JsonPacket *jsongen_info(Song song, gint duration, gint position)
     add_string(builder, "type", "info");
     add_string(builder, "artist", song.artist);
     add_string(builder, "album", song.album);
-    add_string(builder, "song", song.song);
+    add_string(builder, "song", song.name);
     add_int(builder, "duration", duration);
     add_int(builder, "position", position);
 

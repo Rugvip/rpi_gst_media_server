@@ -1,8 +1,4 @@
 #include "jsonio.h"
-#include "jsonparse.h"
-#include "jsongen.h"
-
-static RequestHandler handlers[NUM_REQUEST_TYPES] = {NULL};
 
 void jsonio_read_request(Client *client)
 {
@@ -16,15 +12,15 @@ void jsonio_read_request(Client *client)
         return;
     }
 
-    handlers[request->type](request);
+    client->server->handlers[request->type](client->server, request);
 
     g_object_unref(G_OBJECT(parser));
     g_free(request);
 }
 
-void jsonio_set_request_handler(RequestType type, RequestHandler handler)
+void jsonio_set_request_handler(Server *server, RequestType type, RequestHandler handler)
 {
-    handlers[type] = handler;
+    server->handlers[type] = handler;
 }
 
 void jsonio_send_packet(Client *client, JsonPacket *packet)

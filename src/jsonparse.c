@@ -110,7 +110,7 @@ Request *read_play_request(JsonObject *object)
     if (artist && album && song) {
         request->song.artist = artist;
         request->song.album = album;
-        request->song.song = song;
+        request->song.name = song;
 
         if (get_int(object, "time", &request->time)) {
             return REQUEST(request);
@@ -151,7 +151,7 @@ Request *read_next_request(JsonObject *object)
     if (artist && album && song) {
         request->song.artist = artist;
         request->song.album = album;
-        request->song.song = song;
+        request->song.name = song;
 
         if (get_int(object, "time", &request->time)) {
             return REQUEST(request);
@@ -221,6 +221,7 @@ Request *read_eq_request(JsonObject *object)
     array = get_array(object, "bands");
 
     if (!array || json_array_get_length(array) != NUM_EQ_BANDS) {
+        g_free(request);
         return NULL;
     }
 

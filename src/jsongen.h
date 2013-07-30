@@ -1,11 +1,7 @@
 #ifndef jsongen_h
 #define jsongen_h
 
-#include "pipeline.h"
-
-typedef struct {
-    void *priv;
-} JsonPacket;
+#include "common.h"
 
 void jsongen_free_packet(JsonPacket *);
 void jsongen_write_packet(GOutputStream *, JsonPacket *);
