@@ -69,6 +69,7 @@ struct _Server {
     GPtrArray *clients;
     GDateTime *server_start_time;
     Player *player;
+    GSocketService *service;
     RequestHandler handlers[NUM_REQUEST_TYPES];
 };
 

@@ -1,6 +1,6 @@
 #include "jsongen.h"
 
-#include "pipeline.h"
+#include "server.h"
 
 #include <glib.h>
 #include <json-glib/json-glib.h>

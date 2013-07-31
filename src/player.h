@@ -4,14 +4,6 @@
 #include "common.h"
 #include "jsonio.h"
 
-void handle_info_request(RequestInfo *);
-void handle_play_request(RequestPlay *);
-void handle_pause_request(RequestPause *);
-void handle_next_request(RequestNext *);
-void handle_seek_request(RequestSeek *);
-void handle_volume_request(RequestVolume *);
-void handle_eq_request(RequestEq *);
-
 gint64 player_get_duration(Player *);
 gint64 player_get_position(Player *);
 void player_set_position(Player *, gint mstime);
