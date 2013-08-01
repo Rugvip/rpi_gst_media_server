@@ -48,6 +48,11 @@ void player_set_position(Player *player, gint ms)
     }
 }
 
+void player_pause(Player *player)
+{
+    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+}
+
 static gboolean timeout_duration_query(Server *server)
 {
     gint64 duration = player_get_duration(server->player);

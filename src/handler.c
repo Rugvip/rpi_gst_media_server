@@ -6,6 +6,14 @@ void handle_info_request(RequestInfo *request)
 {
     UNUSED(request);
     g_print("Got info request\n");
+
+    JsonPacket *packet;
+    Player *player;
+
+    player = request->request.client->server->player;
+    packet = jsongen_info(player->mp3source->song,
+        player_get_position(player), player_get_duration(player));
+    jsonio_send_packet(request->request.client, packet);
 }
 
 void handle_play_request(RequestPlay *request)
@@ -18,13 +26,17 @@ void handle_play_request(RequestPlay *request)
     }
 
     player_set_position(request->request.client->server->player, request->time);
-    g_print("Pos: %ld\n", player_get_position(request->request.client->server->player));
-    g_print("Dur: %ld\n", player_get_duration(request->request.client->server->player));
 }
 
 void handle_pause_request(RequestPause *request)
 {
     g_print("Got pause request %ld\n", request->time);
+
+    Player *player;
+
+    player = request->request.client->server->player;
+    player_pause(player);
+    player_set_position(player, request->time);
 }
 
 void handle_next_request(RequestNext *request)
