@@ -40,7 +40,10 @@ void player_set_position(Player *player, gint ms)
 {
     gboolean ret;
 
-    ret = gst_element_seek_simple(player->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, ms * GST_MSECOND);
+    ret = gst_element_seek(player->mp3source->decoder, 1.0, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT,
+        GST_SEEK_TYPE_SET, ms * GST_MSECOND,
+        GST_SEEK_TYPE_SET, (16000 + 6000) * GST_MSECOND);
     if(ret) {
         g_print("seek done\n");
     } else {
@@ -107,6 +110,12 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
     UNUSED(bus);
 
     switch (GST_MESSAGE_TYPE(msg)) {
+    case GST_MESSAGE_SEGMENT_DONE:
+        gst_element_seek(player->mp3source->decoder, 1.0, GST_FORMAT_TIME,
+            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_ACCURATE,
+            GST_SEEK_TYPE_SET, 22000 * GST_MSECOND, GST_SEEK_TYPE_SET, (30000) * GST_MSECOND);
+        g_print("Segment done\n");
+        break;
     case GST_MESSAGE_EOS:
         g_print("End of stream\n");
         gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
