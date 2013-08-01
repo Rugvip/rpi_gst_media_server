@@ -50,15 +50,15 @@ struct _Song {
 };
 
 struct _MP3Source {
-    GstElement *filesrc, *parser, *decoder;
+    GstElement *filesrc, *parser, *decoder, *volume;
     GstElement *bin;
     Song song;
 };
 
 struct _Player {
     GstElement *pipeline;
-    MP3Source *mp3source;
-    GstElement *volume, *equalizer, *sink;
+    MP3Source *source[2];
+    GstElement *adder, *equalizer, *sink;
 
     GMainLoop *main_loop;
     guint bus_watch_id;

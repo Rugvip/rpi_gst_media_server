@@ -6,7 +6,7 @@
 
 gint64 player_get_duration(Player *);
 gint64 player_get_position(Player *);
-void player_set_position(Player *, gint mstime);
+void player_set_segment(Player *, gint mstime);
 void player_pause(Player *);
 gboolean player_set_song(Player *, Song song);
 

@@ -11,7 +11,7 @@ void handle_info_request(RequestInfo *request)
     Player *player;
 
     player = request->request.client->server->player;
-    packet = jsongen_info(player->mp3source->song,
+    packet = jsongen_info(player->source[0]->song,
         player_get_position(player), player_get_duration(player));
     jsonio_send_packet(request->request.client, packet);
 }
@@ -25,7 +25,7 @@ void handle_play_request(RequestPlay *request)
         g_warning("Error handling request\n");
     }
 
-    player_set_position(request->request.client->server->player, request->time);
+    player_set_segment(request->request.client->server->player, request->time);
 }
 
 void handle_pause_request(RequestPause *request)
@@ -36,7 +36,7 @@ void handle_pause_request(RequestPause *request)
 
     player = request->request.client->server->player;
     player_pause(player);
-    player_set_position(player, request->time);
+    player_set_segment(player, request->time);
 }
 
 void handle_next_request(RequestNext *request)
@@ -48,7 +48,7 @@ void handle_next_request(RequestNext *request)
 void handle_seek_request(RequestSeek *request)
 {
     g_print("Got seek request %ld\n", request->time);
-    player_set_position(request->request.client->server->player, request->time);
+    player_set_segment(request->request.client->server->player, request->time);
 }
 
 void handle_volume_request(RequestVolume *request)

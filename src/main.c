@@ -11,7 +11,7 @@ void server_send_playback_status(Server *server)
 {
     JsonPacket *packet;
 
-    packet = jsongen_playing(server->player->mp3source->song,
+    packet = jsongen_playing(server->player->source[0]->song,
         player_get_position(server->player), player_get_duration(server->player));
     jsonio_broadcast_packet(server, packet);
 }
