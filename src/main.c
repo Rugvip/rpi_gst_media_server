@@ -16,6 +16,21 @@ void server_send_playback_status(Server *server)
     jsonio_broadcast_packet(server, packet);
 }
 
+gboolean server_print_connections(Server *server)
+{
+    gint i;
+    GPtrArray *clients = server->clients;
+    gint len = server->clients->len;
+
+    g_print("%d clients connected\n", len);
+    for (i = 0; i < len; ++i) {
+        Client *client;
+        client = g_ptr_array_index(clients, i);
+        g_print("%s:%d\n", client->remote_address, client->remote_port);
+    }
+    return TRUE;
+}
+
 int main(int argc, const char *argv[])
 {
     g_print("Starting %s\n", argv[0]);
@@ -28,17 +43,13 @@ int main(int argc, const char *argv[])
     server = server_new();
     server->player = player_new(server);
 
-    g_print("Initializing server\n");
     server_init(server);
-    g_print("Initializing player\n");
     player_init(server->player);
 
     g_timeout_add(60000, (GSourceFunc) server_print_connections, server);
     g_timeout_add(10000, (GSourceFunc) server_send_playback_status, server);
 
-    g_print("Starting server\n");
     server_start(server, PORT);
-    g_print("Starting player\n");
     player_start(server->player);
     return 0;
 }

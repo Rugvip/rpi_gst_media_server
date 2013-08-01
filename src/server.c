@@ -35,21 +35,6 @@ static void async_client_connection_read(GObject *obj, GAsyncResult *res, Client
     }
 }
 
-gboolean server_print_connections(Server *server)
-{
-    gint i;
-    GPtrArray *clients = server->clients;
-    gint len = server->clients->len;
-
-    g_print("%d clients connected\n", len);
-    for (i = 0; i < len; ++i) {
-        Client *client;
-        client = g_ptr_array_index(clients, i);
-        g_print("%s:%d\n", client->remote_address, client->remote_port);
-    }
-    return TRUE;
-}
-
 static Client *client_new(Server *server, GSocketConnection *connection)
 {
     GError *error = NULL;
@@ -167,6 +152,7 @@ void server_init(Server *server)
 void server_start(Server *server, gint port)
 {
     GError *error = NULL;
+
     g_signal_connect(server->service, "incoming", G_CALLBACK(on_client_connected), server);
     g_socket_listener_add_inet_port(G_SOCKET_LISTENER(server->service), port, NULL, &error);
     g_socket_service_start(server->service);

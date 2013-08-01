@@ -13,9 +13,13 @@ void handle_play_request(RequestPlay *request)
     g_print("Got play request %s/%s/%s %ld\n", request->song.artist
         ,request->song.album, request->song.name, request->time);
 
-    if (!player_set_song(request->request.client->server->player , request->song)) {
+    if (!player_set_song(request->request.client->server->player, request->song)) {
         g_warning("Error handling request\n");
     }
+
+    player_set_position(request->request.client->server->player, request->time);
+    g_print("Pos: %ld\n", player_get_position(request->request.client->server->player));
+    g_print("Dur: %ld\n", player_get_duration(request->request.client->server->player));
 }
 
 void handle_pause_request(RequestPause *request)
@@ -32,6 +36,7 @@ void handle_next_request(RequestNext *request)
 void handle_seek_request(RequestSeek *request)
 {
     g_print("Got seek request %ld\n", request->time);
+    player_set_position(request->request.client->server->player, request->time);
 }
 
 void handle_volume_request(RequestVolume *request)

@@ -42,19 +42,17 @@ void player_set_position(Player *player, gint ms)
 
     ret = gst_element_seek_simple(player->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, ms * GST_MSECOND);
     if(ret) {
-        g_print("seek done.");
+        g_print("seek done\n");
     } else {
-        g_warning("seek failed");
+        g_warning("seek failed\n");
     }
 }
 
 static gboolean timeout_duration_query(Server *server)
 {
-    static int i = 0;
     gint64 duration = player_get_duration(server->player);
-    g_print("testtimeout %d\n", ++i);
     if (duration < 0) {
-        return TRUE;
+        return TRUE; /* Repeat timer */
     }
 
     JsonPacket *packet;
@@ -73,7 +71,7 @@ static gboolean timeout_duration_query(Server *server)
 gboolean player_set_song(Player *player, Song song)
 {
     GstStateChangeReturn ret;
-    gst_element_set_state(player->pipeline, GST_STATE_NULL); // FIXME: Needed?
+    gst_element_set_state(player->pipeline, GST_STATE_READY); // FIXME: Needed?
 
     gchar *path;
 
@@ -85,8 +83,13 @@ gboolean player_set_song(Player *player, Song song)
         g_warning("State change failed");
         g_free(path);
         return FALSE;
+    } else if (ret == GST_STATE_CHANGE_ASYNC) {
+        g_print("Async\n");
+        gst_element_get_state(player->pipeline, NULL, NULL, GST_SECOND*2);
     }
-    g_timeout_add(10, (GSourceFunc)timeout_duration_query, player->server);
+    if (timeout_duration_query(player->server)) {
+        g_timeout_add(5, (GSourceFunc)timeout_duration_query, player->server);
+    }
     g_print("Now playing: %s\n", path);
 
     g_free(path);
@@ -208,15 +211,15 @@ void player_init(Player *player)
     gst_object_unref(bus);
 
     g_object_set(G_OBJECT(player->volume), "volume", 2.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band0", 4.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band1", 3.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band2", 2.0, NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band3", 1.0, NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band0", 6.0,  NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band1", 4.0,  NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band2", 2.0,  NULL);
+    g_object_set(G_OBJECT(player->equalizer), "band3", 1.0,  NULL);
 
     g_object_set(G_OBJECT(player->mp3source->filesrc), "location",
         "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation", NULL);
 
-    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
 }
 
 void player_start(Player *player)
