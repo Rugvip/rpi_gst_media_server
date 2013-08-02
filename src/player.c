@@ -85,7 +85,7 @@ gboolean player_set_song(Player *player, Song song)
 
     path = g_build_filename(MUSIC_DIR, song.artist, song.album, song.name, NULL);
 
-    g_object_set(G_OBJECT(player->source[0]->filesrc), "location", path, NULL);
+    g_object_set(player->source[0]->filesrc, "location", path, NULL);
     ret = gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_warning("State change failed");
@@ -249,17 +249,17 @@ void player_init(Player *player)
     player->bus_watch_id = gst_bus_add_watch(bus, (GstBusFunc) bus_call, player);
     gst_object_unref(bus);
 
-    g_object_set(G_OBJECT(player->source[0]->volume), "volume", 0.7, NULL);
-    g_object_set(G_OBJECT(player->source[1]->volume), "volume", 0.7, NULL);
+    g_object_set(player->source[0]->volume, "volume", 0.7, NULL);
+    g_object_set(player->source[1]->volume, "volume", 0.7, NULL);
 
-    g_object_set(G_OBJECT(player->equalizer), "band0", 4.0,  NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band1", 3.0,  NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band2", 2.0,  NULL);
-    g_object_set(G_OBJECT(player->equalizer), "band3", 1.0,  NULL);
+    g_object_set(player->equalizer, "band0", 4.0,  NULL);
+    g_object_set(player->equalizer, "band1", 3.0,  NULL);
+    g_object_set(player->equalizer, "band2", 2.0,  NULL);
+    g_object_set(player->equalizer, "band3", 1.0,  NULL);
 
-    g_object_set(G_OBJECT(player->source[0]->filesrc), "location",
+    g_object_set(player->source[0]->filesrc, "location",
         "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation", NULL);
-    g_object_set(G_OBJECT(player->source[1]->filesrc), "location",
+    g_object_set(player->source[1]->filesrc, "location",
         "/home/rugvip/music/Grendel/Best Of Grendel/Void Malign", NULL);
 
     gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
