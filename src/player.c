@@ -206,6 +206,9 @@ void player_init(Player *player)
 {
     GstBus *bus;
 
+    g_setenv("GST_DEBUG_DUMP_DOT_DIR", "/home/rugvip/", TRUE);
+
+
     char *args[] = {
         "mp3net",
         "--gst-debug-no-color",
@@ -259,7 +262,9 @@ void player_init(Player *player)
     g_object_set(G_OBJECT(player->source[1]->filesrc), "location",
         "/home/rugvip/music/Grendel/Best Of Grendel/Void Malign", NULL);
 
-    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+
+    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 }
 
 void player_start(Player *player)
