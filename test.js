@@ -12,7 +12,7 @@ var gonzo = {
     type: "play",
     artist: "Youtube Mixes",
     album: "Hardcore",
-    song: "DJ Gonzo II",
+    song: "DJ Gonzo 2.mp3",
     time: 30000
 }
 
@@ -28,7 +28,7 @@ var socket = net.createConnection(3264);
 socket.setEncoding('ascii');
 
 socket.on('connect', function () {
-    socket.write(JSON.stringify(snow));
+    socket.write(JSON.stringify(gonzo));
     socket.end();
 });
 

@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include <math.h>
+
 const gchar *const MUSIC_DIR = "/home/rugvip/music";
 
 gint64 player_get_duration(Player *player)
@@ -36,14 +38,14 @@ gint64 player_get_position(Player *player)
     }
 }
 
-void player_set_segment(Player *player, gint ms)
+void player_set_segment(Player *player, gint64 ms)
 {
     gboolean ret;
 
     ret = gst_element_seek(player->source[0]->decoder, 1.0, GST_FORMAT_TIME,
         GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT,
         GST_SEEK_TYPE_SET, ms * GST_MSECOND,
-        GST_SEEK_TYPE_SET, (16000 + 6000) * GST_MSECOND);
+        GST_SEEK_TYPE_SET, (ms + 6000) * GST_MSECOND);
     if(ret) {
         g_print("seek done\n");
     } else {
@@ -115,7 +117,7 @@ gboolean player_set_song(Player *player, Song song)
 static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
 {
     UNUSED(bus);
-    g_print("Bus call %s\n", gst_message_type_get_name(GST_MESSAGE_TYPE(msg)));
+    // g_print("Bus call %s\n", gst_message_type_get_name(GST_MESSAGE_TYPE(msg)));
     gint64 t = 0;
     GstFormat fmt;
     switch (GST_MESSAGE_TYPE(msg)) {
@@ -123,8 +125,8 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
         GstTagList *tags = NULL;
 
         gst_message_parse_tag(msg, &tags);
-        g_print("Got tags from element %s\n", GST_OBJECT_NAME(msg->src));
-        g_print("Tags: %s\n", gst_tag_list_to_string(tags));
+        // g_print("Got tags from element %s\n", GST_OBJECT_NAME(msg->src));
+        // g_print("Tags: %s\n", gst_tag_list_to_string(tags));
         gst_tag_list_free(tags);
         break;
     }
@@ -185,30 +187,39 @@ Player *player_new(Server *server)
 
 static void mp3_source_init(MP3Source *src, const gchar *name)
 {
-    GstPad *pad;
-
     src->filesrc = gst_element_factory_make("filesrc"        , "file-src");
-    src->parser  = gst_element_factory_make("mpegaudioparse" , "mpeg-audio-parser");
-    src->decoder = gst_element_factory_make("mpg123audiodec" , "mpeg-audio-decoder");
-    src->volume  = gst_element_factory_make("volume" , "volume");
-
     g_assert(src->filesrc);
+
+    src->parser  = gst_element_factory_make("mpegaudioparse" , "mpeg-audio-parser");
     g_assert(src->parser);
+
+    src->decoder = gst_element_factory_make("mpg123audiodec" , "mpeg-audio-decoder");
     g_assert(src->decoder);
-    g_assert(src->volume);
 
     src->bin = gst_bin_new(name);
     g_assert(src->bin);
 
-    gst_bin_add_many(GST_BIN(src->bin),
-        src->filesrc, src->parser, src->decoder, src->volume, NULL);
-    gst_element_link_many(src->filesrc, src->parser, src->decoder, src->volume, NULL);
+    gst_bin_add_many(GST_BIN(src->bin), src->filesrc, src->parser, src->decoder, NULL);
+    gst_element_link_many(src->filesrc, src->parser, src->decoder, NULL);
 
-    pad = gst_element_get_static_pad(src->volume, "src");
-    gst_element_add_pad(src->bin, gst_ghost_pad_new("src", pad));
-    gst_object_unref(GST_OBJECT(pad));
+    src->pad = gst_element_get_static_pad(src->decoder, "src");
+    gst_element_add_pad(src->bin, gst_ghost_pad_new("src", src->pad));
+    gst_object_unref(GST_OBJECT(src->pad));
+
+    gst_object_ref(src->bin);
 }
 
+static GstPadProbeReturn pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, Player *player)
+{
+    UNUSED(pad);
+    UNUSED(info);
+    // gst_pad_remove_probe(pad, GST_PAD_PROBE_INFO_ID(info));
+    gst_pad_send_event(player->source[0]->adderPad, gst_event_new_eos());
+
+    return GST_PAD_PROBE_OK;
+}
+
+gdouble vol = -1.0;
 void player_init(Player *player)
 {
     GstBus *bus;
@@ -229,35 +240,67 @@ void player_init(Player *player)
     player->main_loop = g_main_loop_new(NULL, FALSE);
 
     player->pipeline  = gst_pipeline_new("mediaplayer");
-    player->adder = gst_element_factory_make("adder" , "adder");
-    player->equalizer = gst_element_factory_make("equalizer-10bands" , "equalizer");
-    player->sink      = gst_element_factory_make("alsasink" , "alsa-sink");
-
     g_assert(player->pipeline);
+
+    player->adder     = gst_element_factory_make("adder" , "adder");
     g_assert(player->adder);
+
+    player->volume     = gst_element_factory_make("volume" , "volume");
+    g_assert(player->volume);
+
+    player->equalizer = gst_element_factory_make("equalizer-10bands" , "equalizer");
     g_assert(player->equalizer);
+
+    player->sink      = gst_element_factory_make("alsasink" , "alsa-sink");
     g_assert(player->sink);
 
-    mp3_source_init(player->source[0], "mp3-src-bin-left");
-    mp3_source_init(player->source[1], "mp3-src-bin-right");
+    mp3_source_init(player->source[0], "mp3-source-0");
+    mp3_source_init(player->source[1], "mp3-source-1");
 
     gst_bin_add(GST_BIN(player->pipeline), player->source[0]->bin);
     gst_bin_add(GST_BIN(player->pipeline), player->source[1]->bin);
 
     gst_bin_add_many(GST_BIN(player->pipeline),
-        player->adder, player->equalizer, player->sink, NULL);
+        player->adder, player->volume, player->equalizer, player->sink, NULL);
 
     gst_element_link(player->source[0]->bin, player->adder);
     gst_element_link(player->source[1]->bin, player->adder);
 
-    gst_element_link_many(player->adder, player->equalizer, player->sink, NULL);
+    gst_element_link_many(player->adder, player->volume, player->equalizer, player->sink, NULL);
+
+    player->source[0]->adderPad = gst_element_get_static_pad(player->adder, "sink_0");
+    g_assert(player->source[0]->adderPad);
+
+    player->source[1]->adderPad = gst_element_get_static_pad(player->adder, "sink_1");
+    g_assert(player->source[1]->adderPad);
 
     bus = gst_pipeline_get_bus(GST_PIPELINE(player->pipeline));
     player->bus_watch_id = gst_bus_add_watch(bus, (GstBusFunc) bus_call, player);
     gst_object_unref(bus);
 
-    g_object_set(player->source[0]->volume, "volume", 0.7, NULL);
-    g_object_set(player->source[1]->volume, "volume", 0.7, NULL);
+    gboolean xfade(Player *player)
+    {
+        // g_print("Hi %2.2f %2.2f %2.2f\n", vol, fabs(vol), 1.0 - fabs(vol));
+        g_object_set(player->source[0]->adderPad, "volume", fabs(vol), NULL);
+        g_object_set(player->source[1]->adderPad, "volume", 1.0 - fabs(vol), NULL);
+        vol += 0.02;
+        if (vol > 1.0) {
+            gst_pad_add_probe(player->source[0]->pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+                (GstPadProbeCallback) pad_probe_cb, player, NULL);
+            // gst_element_set_state(player->source[0]->decoder, GST_STATE_READY);
+            // gst_element_unlink(player->source[0]->decoder, player->adder);
+            // gst_bin_remove(GST_BIN(player->pipeline), player->source[0]->bin);
+            // gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+            g_object_set(player->source[1]->adderPad, "volume", 0.5, NULL);
+            vol = -1.0;
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    g_timeout_add(50, (GSourceFunc) xfade, player);
+
+    g_object_set(player->volume, "volume", 0.1, NULL);
 
     g_object_set(player->equalizer, "band0", 4.0,  NULL);
     g_object_set(player->equalizer, "band1", 3.0,  NULL);
@@ -269,7 +312,7 @@ void player_init(Player *player)
     g_object_set(player->source[1]->filesrc, "location",
         "/home/rugvip/music/Grendel/Best Of Grendel/Void Malign", NULL);
 
-    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 }
