@@ -38,14 +38,14 @@ gint64 player_get_position(Player *player)
     }
 }
 
-void player_set_segment(Player *player, gint64 ms)
+void player_seek(Player *player, gint64 ms)
 {
     gboolean ret;
-
-    ret = gst_element_seek(player->source[0]->decoder, 1.0, GST_FORMAT_TIME,
-        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT,
-        GST_SEEK_TYPE_SET, ms * GST_MSECOND,
-        GST_SEEK_TYPE_SET, (ms + 6000) * GST_MSECOND);
+    g_print("Seek to %ld\n", ms);
+    ret = gst_element_seek_simple(player->source[0]->decoder,
+                                  GST_FORMAT_TIME,
+                                  GST_SEEK_FLAG_FLUSH,
+                                  ms * GST_MSECOND);
     if(ret) {
         g_print("seek done\n");
     } else {
@@ -135,9 +135,9 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
         g_print("New duration: %ld\n", t);
         break;
     case GST_MESSAGE_SEGMENT_DONE:
-        gst_element_seek(player->source[0]->decoder, 1.0, GST_FORMAT_TIME,
-            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_ACCURATE,
-            GST_SEEK_TYPE_SET, 22000 * GST_MSECOND, GST_SEEK_TYPE_SET, (30000) * GST_MSECOND);
+        // gst_element_seek(player->source[0]->decoder, 1.0, GST_FORMAT_TIME,
+        //     GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_ACCURATE,
+        //     GST_SEEK_TYPE_SET, 22000 * GST_MSECOND, GST_SEEK_TYPE_SET, (30000) * GST_MSECOND);
         g_print("Segment done\n");
         break;
     case GST_MESSAGE_EOS:
@@ -298,7 +298,10 @@ void player_init(Player *player)
         return TRUE;
     }
 
-    g_timeout_add(50, (GSourceFunc) xfade, player);
+    // g_timeout_add(50, (GSourceFunc) xfade, player);
+
+    g_object_set(player->source[0]->adderPad, "volume", 0.3, NULL);
+    g_object_set(player->source[1]->adderPad, "volume", 1.0, NULL);
 
     g_object_set(player->volume, "volume", 0.1, NULL);
 
@@ -308,9 +311,9 @@ void player_init(Player *player)
     g_object_set(player->equalizer, "band3", 1.0,  NULL);
 
     g_object_set(player->source[0]->filesrc, "location",
-        "/home/rugvip/music/Grendel/Best Of Grendel/Harsh Generation", NULL);
+        "/home/rugvip/music/Daft Punk/Random Access Memories/Contact", NULL);
     g_object_set(player->source[1]->filesrc, "location",
-        "/home/rugvip/music/Grendel/Best Of Grendel/Void Malign", NULL);
+        "/home/rugvip/music/Daft Punk/Random Access Memories/Get Lucky", NULL);
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
