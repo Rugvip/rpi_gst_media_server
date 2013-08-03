@@ -58,20 +58,27 @@ void player_pause(Player *player)
 
 static gboolean timeout_duration_query(Server *server)
 {
-    gint64 duration = player_get_duration(server->player);
+    gint64 position;
+    gint64 duration;
+
+    duration = player_get_duration(server->player);
+
     if (duration < 0) {
         return TRUE; /* Repeat timer */
     }
 
-    JsonPacket *packet;
-    gint64 position;
 
     position = player_get_position(server->player);
 
     position = position < 0 ? 0 : position;
 
-    packet = jsongen_playing(server->player->source[0]->song, duration, position);
-    jsonio_broadcast_packet(server, packet);
+    ResponsePlaying response = {
+        .song = server->player->source[0]->song,
+        .duration = duration,
+        .position = position,
+    };
+
+    jsonio_broadcast_packet(server, jsonio_response_playing_packet(&response));
 
     return FALSE;
 }

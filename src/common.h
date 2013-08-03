@@ -133,4 +133,30 @@ typedef struct {
     gdouble bands[NUM_EQ_BANDS];
 } RequestEq;
 
+
+
+typedef struct {
+    Song song;
+    gint64 duration;
+    gint64 position;
+} ResponsePlaying;
+
+typedef struct {
+    gint64 time;
+} ResponsePaused;
+
+typedef struct {
+    gdouble bands[NUM_EQ_BANDS];
+} ResponseEq;
+
+typedef struct {
+    gdouble volume;
+} ResponseVolume;
+
+typedef struct {
+    Song song;
+    gint64 duration;
+    gint64 position;
+} ResponseInfo;
+
 #endif /* common_h */

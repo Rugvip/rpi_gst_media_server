@@ -9,11 +9,13 @@
 
 void server_send_playback_status(Server *server)
 {
-    JsonPacket *packet;
+    ResponsePlaying response = {
+        .song = server->player->source[0]->song,
+        .duration = player_get_duration(server->player),
+        .position = player_get_position(server->player),
+    };
 
-    packet = jsongen_playing(server->player->source[0]->song,
-        player_get_position(server->player), player_get_duration(server->player));
-    jsonio_broadcast_packet(server, packet);
+    jsonio_broadcast_packet(server, jsonio_response_playing_packet(&response));
 }
 
 gboolean server_print_connections(Server *server)

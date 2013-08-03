@@ -2,8 +2,12 @@
 #define jsonio_h
 
 #include "common.h"
-#include "jsonparse.h"
-#include "jsongen.h"
+
+JsonPacket *jsonio_response_playing_packet(ResponsePlaying *response);
+JsonPacket *jsonio_response_paused_packet(ResponsePaused *response);
+JsonPacket *jsonio_response_eq_packet(ResponseEq *response);
+JsonPacket *jsonio_response_volume_packet(ResponseVolume *response);
+JsonPacket *jsonio_response_info_packet(ResponseInfo *response);
 
 void jsonio_read_request(Client *);
 void jsonio_set_request_handler(Server *, RequestType, RequestHandler);

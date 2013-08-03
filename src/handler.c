@@ -7,13 +7,17 @@ void handle_info_request(RequestInfo *request)
     UNUSED(request);
     g_print("Got info request\n");
 
-    JsonPacket *packet;
     Player *player;
 
     player = request->request.client->server->player;
-    packet = jsongen_info(player->source[0]->song,
-        player_get_position(player), player_get_duration(player));
-    jsonio_send_packet(request->request.client, packet);
+
+    ResponsePlaying response = {
+        .song = player->source[0]->song,
+        .duration = player_get_duration(player),
+        .position = player_get_position(player),
+    };
+
+    jsonio_send_packet(request->request.client, jsonio_response_playing_packet(&response));
 }
 
 void handle_play_request(RequestPlay *request)

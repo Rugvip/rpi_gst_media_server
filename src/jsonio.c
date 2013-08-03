@@ -1,4 +1,35 @@
 #include "jsonio.h"
+#include "jsongen.h"
+#include "jsonparse.h"
+
+JsonPacket *jsonio_response_playing_packet(ResponsePlaying *response)
+{
+    return jsongen_playing(response->song, response->duration, response->position);
+}
+
+JsonPacket *jsonio_response_paused_packet(ResponsePaused *response)
+{
+    return jsongen_paused(response->time);
+
+}
+
+JsonPacket *jsonio_response_eq_packet(ResponseEq *response)
+{
+    return jsongen_eq(response->bands);
+
+}
+
+JsonPacket *jsonio_response_volume_packet(ResponseVolume *response)
+{
+    return jsongen_volume(response->volume);
+
+}
+
+JsonPacket *jsonio_response_info_packet(ResponseInfo *response)
+{
+    return jsongen_info(response->song, response->duration, response->position);
+}
+
 
 void jsonio_read_request(Client *client)
 {
