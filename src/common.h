@@ -65,6 +65,8 @@ struct _Player {
     GMainLoop *main_loop;
     guint bus_watch_id;
     Server *server;
+
+    gint source_id;
 };
 
 struct _Server {

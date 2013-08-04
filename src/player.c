@@ -44,7 +44,7 @@ void player_seek(Player *player, gint64 ms)
     g_print("Seek to %ld\n", ms);
     ret = gst_element_seek_simple(player->source[0]->decoder,
                                   GST_FORMAT_TIME,
-                                  GST_SEEK_FLAG_FLUSH,
+                                  GST_SEEK_FLAG_ACCURATE,
                                   ms * GST_MSECOND);
     if(ret) {
         g_print("seek done\n");
@@ -88,14 +88,14 @@ static gboolean timeout_duration_query(Server *server)
 gboolean player_set_song(Player *player, Song song)
 {
     GstStateChangeReturn ret;
-    gst_element_set_state(player->pipeline, GST_STATE_READY); // FIXME: Needed?
+    gst_element_set_state(player->source[0]->bin, GST_STATE_READY);
 
     gchar *path;
 
     path = g_build_filename(MUSIC_DIR, song.artist, song.album, song.name, NULL);
 
     g_object_set(player->source[0]->filesrc, "location", path, NULL);
-    ret = gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    ret = gst_element_sync_state_with_parent(player->source[0]->bin);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_warning("State change failed");
         g_free(path);
@@ -239,19 +239,19 @@ void player_init(Player *player)
 
     player->main_loop = g_main_loop_new(NULL, FALSE);
 
-    player->pipeline  = gst_pipeline_new("mediaplayer");
+    player->pipeline = gst_pipeline_new("mediaplayer");
     g_assert(player->pipeline);
 
-    player->adder     = gst_element_factory_make("adder" , "adder");
+    player->adder = gst_element_factory_make("adder" , "adder");
     g_assert(player->adder);
 
-    player->volume     = gst_element_factory_make("volume" , "volume");
+    player->volume = gst_element_factory_make("volume" , "volume");
     g_assert(player->volume);
 
     player->equalizer = gst_element_factory_make("equalizer-10bands" , "equalizer");
     g_assert(player->equalizer);
 
-    player->sink      = gst_element_factory_make("alsasink" , "alsa-sink");
+    player->sink = gst_element_factory_make("alsasink" , "alsa-sink");
     g_assert(player->sink);
 
     mp3_source_init(player->source[0], "mp3-source-0");
@@ -300,8 +300,10 @@ void player_init(Player *player)
 
     // g_timeout_add(50, (GSourceFunc) xfade, player);
 
-    g_object_set(player->source[0]->adderPad, "volume", 0.3, NULL);
-    g_object_set(player->source[1]->adderPad, "volume", 1.0, NULL);
+    g_object_set(player->sink, "sync", FALSE, NULL);
+
+    g_object_set(player->source[0]->adderPad, "volume", 0.5, NULL);
+    g_object_set(player->source[1]->adderPad, "volume", 0.5, NULL);
 
     g_object_set(player->volume, "volume", 0.1, NULL);
 
@@ -315,7 +317,7 @@ void player_init(Player *player)
     g_object_set(player->source[1]->filesrc, "location",
         "/home/rugvip/music/Daft Punk/Random Access Memories/Get Lucky", NULL);
 
-    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 }
