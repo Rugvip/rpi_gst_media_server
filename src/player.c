@@ -4,7 +4,7 @@
 
 const gchar *const MUSIC_DIR = "/home/rugvip/music";
 
-gint64 player_get_duration(Player *player)
+gint64 element_query_position(GstElement *element)
 {
     static GstQuery *query = NULL;
 
@@ -12,13 +12,18 @@ gint64 player_get_duration(Player *player)
         query = gst_query_new_duration(GST_FORMAT_TIME);
     }
 
-    if (gst_element_query(player->source[0]->parser, query)) {
+    if (gst_element_query(element, query)) {
         gint64 duration;
         gst_query_parse_duration(query, NULL, &duration);
         return GST_TIME_AS_MSECONDS(duration);
     } else {
         return -1;
     }
+}
+
+gint64 player_get_duration(Player *player)
+{
+    return element_query_duration(player->source[player->currentSource]->parser);
 }
 
 gint64 player_get_position(Player *player)
