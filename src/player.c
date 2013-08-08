@@ -4,7 +4,7 @@
 
 const gchar *const MUSIC_DIR = "/home/rugvip/music";
 
-gint64 element_query_position(GstElement *element)
+static gint64 element_query_duration(GstElement *element)
 {
     static GstQuery *query = NULL;
 
@@ -23,7 +23,7 @@ gint64 element_query_position(GstElement *element)
 
 gint64 player_get_duration(Player *player)
 {
-    return element_query_duration(player->source[player->currentSource]->parser);
+    return element_query_duration(player->source[player->source_id]->parser);
 }
 
 gint64 player_get_position(Player *player)
@@ -90,31 +90,124 @@ static gboolean timeout_duration_query(Server *server)
     return FALSE;
 }
 
-gboolean player_set_song(Player *player, Song song)
+static gboolean set_source_song0(GstElement *source, Song song)
 {
-    GstStateChangeReturn ret;
-    gst_element_set_state(player->source[0]->bin, GST_STATE_READY);
-
     gchar *path;
+
+    gst_element_set_state(source, GST_STATE_READY);
 
     path = g_build_filename(MUSIC_DIR, song.artist, song.album, song.name, NULL);
 
-    g_object_set(player->source[0]->filesrc, "location", path, NULL);
-    ret = gst_element_sync_state_with_parent(player->source[0]->bin);
+    g_object_set(source, "location", path, NULL);
+
+    g_free(path);
+
+    return gst_element_sync_state_with_parent(source);
+}
+
+static gboolean set_source_song_async(GstElement *source, Song song)
+{
+    GstStateChangeReturn ret;
+
+    ret = set_source_song0(source, song);
+
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_warning("State change failed");
-        g_free(path);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean set_source_song_sync(GstElement *source, Song song)
+{
+    GstStateChangeReturn ret;
+
+    ret = set_source_song0(source, song);
+
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        g_warning("State change failed");
         return FALSE;
     } else if (ret == GST_STATE_CHANGE_ASYNC) {
-        g_print("Async\n");
-        gst_element_get_state(player->pipeline, NULL, NULL, GST_SECOND*2);
+        g_print("Async state change\n");
+        gst_element_get_state(source, NULL, NULL, GST_SECOND*2);
+    } else {
+        g_print("Sync state change\n");
     }
+
+    return TRUE;
+}
+
+gboolean player_set_song(Player *player, Song song)
+{
+    gst_element_set_state(player->source[0]->bin, GST_STATE_READY);
+
+    set_source_song_sync(player->source[0]->filesrc, song);
+
     if (timeout_duration_query(player->server)) {
         g_timeout_add(5, (GSourceFunc)timeout_duration_query, player->server);
     }
-    g_print("Now playing: %s\n", path);
 
-    g_free(path);
+    return TRUE;
+}
+
+typedef struct _DurationQuery DurationQuery;
+
+typedef void (*SongDurationQueryCallback)(DurationQuery *query, gint64 duration);
+
+struct _DurationQuery {
+    Song song;
+    GstElement *pipeline;
+    SongDurationQueryCallback callback;
+};
+
+
+static gboolean song_duration_query_timeout(DurationQuery *query)
+{
+    gint64 duration;
+
+    duration = element_query_duration(query->pipeline);
+
+    if (duration < 0) {
+        return TRUE; /* Repeat timer */
+    }
+
+    query->callback(query, duration);
+
+    return FALSE;
+}
+
+gboolean song_duration_query(Song song, SongDurationQueryCallback callback)
+{
+    DurationQuery *query;
+    GstElement *source;
+    GstElement *parser;
+    GstElement *sink;
+
+    query = g_new0(DurationQuery, 1);
+
+    query->callback = callback;
+
+    query->pipeline = gst_pipeline_new("duration-query");
+    g_assert(query->pipeline);
+
+    source = gst_element_factory_make("filesrc", NULL);
+    g_assert(source);
+
+    parser = gst_element_factory_make("mpegaudioparse", NULL);
+    g_assert(parser);
+
+    sink = gst_element_factory_make("fakesink", NULL);
+    g_assert(sink);
+
+    gst_bin_add_many(GST_BIN(query->pipeline),
+        source, parser, sink, NULL);
+
+    gst_element_link_many(source, parser, sink, NULL);
+
+    set_source_song_async(source, song);
+
+    g_timeout_add(5, (GSourceFunc)song_duration_query_timeout, query);
 
     return TRUE;
 }
@@ -186,6 +279,8 @@ Player *player_new(Server *server)
     player->source[0] = mp3_source_new();
     player->source[1] = mp3_source_new();
     player->server = server;
+
+    player->source_id = 0;
 
     return player;
 }
@@ -322,7 +417,7 @@ void player_init(Player *player)
     g_object_set(player->source[1]->filesrc, "location",
         "/home/rugvip/music/Daft Punk/Random Access Memories/Get Lucky", NULL);
 
-    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 }
