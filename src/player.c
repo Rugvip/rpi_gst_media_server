@@ -153,7 +153,7 @@ gboolean player_set_song(Player *player, Song song)
 
 typedef struct _DurationQuery DurationQuery;
 
-typedef void (*SongDurationQueryCallback)(DurationQuery *query, gint64 duration);
+typedef void (*SongDurationQueryCallback)(Song song, gint64 duration);
 
 struct _DurationQuery {
     Song song;
@@ -172,7 +172,11 @@ static gboolean song_duration_query_timeout(DurationQuery *query)
         return TRUE; /* Repeat timer */
     }
 
-    query->callback(query, duration);
+    query->callback(query->song, duration);
+
+    gst_element_set_state(query->pipeline, GST_STATE_NULL);
+
+    gst_object_unref(GST_OBJECT(query->pipeline));
 
     return FALSE;
 }
@@ -180,12 +184,11 @@ static gboolean song_duration_query_timeout(DurationQuery *query)
 gboolean song_duration_query(Song song, SongDurationQueryCallback callback)
 {
     DurationQuery *query;
-    GstElement *source;
-    GstElement *parser;
-    GstElement *sink;
+    GstElement *source, *parser, *sink;
 
     query = g_new0(DurationQuery, 1);
 
+    query->song = song;
     query->callback = callback;
 
     query->pipeline = gst_pipeline_new("duration-query");
@@ -206,6 +209,8 @@ gboolean song_duration_query(Song song, SongDurationQueryCallback callback)
     gst_element_link_many(source, parser, sink, NULL);
 
     set_source_song_async(source, song);
+
+    gst_element_set_state(query->pipeline, GST_STATE_PLAYING);
 
     g_timeout_add(5, (GSourceFunc)song_duration_query_timeout, query);
 
@@ -330,7 +335,7 @@ void player_init(Player *player)
     char *args[] = {
         "mp3net",
         "--gst-debug-no-color",
-        "--gst-debug-level=3"
+        "--gst-debug-level=2"
     };
     char **argv = args;
     int argc = sizeof(args)/sizeof(gchar *);
@@ -402,10 +407,10 @@ void player_init(Player *player)
 
     g_object_set(player->sink, "sync", FALSE, NULL);
 
-    g_object_set(player->source[0]->adderPad, "volume", 0.5, NULL);
-    g_object_set(player->source[1]->adderPad, "volume", 0.5, NULL);
+    g_object_set(player->source[0]->adderPad, "volume", 1.0, NULL);
+    g_object_set(player->source[1]->adderPad, "volume", 1.0, NULL);
 
-    g_object_set(player->volume, "volume", 0.1, NULL);
+    g_object_set(player->volume, "volume", 1.0, NULL);
 
     g_object_set(player->equalizer, "band0", 4.0,  NULL);
     g_object_set(player->equalizer, "band1", 3.0,  NULL);
@@ -418,6 +423,12 @@ void player_init(Player *player)
         "/home/rugvip/music/Daft Punk/Random Access Memories/Get Lucky", NULL);
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+
+    void cb(Song song, gint64 dur) {
+        g_print("Song: %s, duration: %ld\n", song.name, dur);
+    }
+
+    song_duration_query((Song) {"Daft Punk", "Random Access Memories", "Touch"}, cb);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 }
