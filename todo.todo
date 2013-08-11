@@ -1,0 +1,10 @@
+Gst
+ ☐ Switch socket connection to stdio
+ ☐ Crossfader
+ ☐ Next song setup
+
+Node server
+ ☐ Start gst server and pipe IO
+ ☐ Simple player gui
+ ☐ Playlist
+ ☐ Play in specific time range
