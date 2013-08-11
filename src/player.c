@@ -1,25 +1,7 @@
 #include "player.h"
+#include "gst_utils.h"
 
 #include <math.h>
-
-const gchar *const MUSIC_DIR = "/home/rugvip/music";
-
-static gint64 element_query_duration(GstElement *element)
-{
-    static GstQuery *query = NULL;
-
-    if (!query) {
-        query = gst_query_new_duration(GST_FORMAT_TIME);
-    }
-
-    if (gst_element_query(element, query)) {
-        gint64 duration;
-        gst_query_parse_duration(query, NULL, &duration);
-        return GST_TIME_AS_MSECONDS(duration);
-    } else {
-        return -1;
-    }
-}
 
 gint64 player_get_duration(Player *player)
 {
@@ -28,19 +10,7 @@ gint64 player_get_duration(Player *player)
 
 gint64 player_get_position(Player *player)
 {
-    static GstQuery *query = NULL;
-
-    if (!query) {
-        query = gst_query_new_position(GST_FORMAT_TIME);
-    }
-
-    if (gst_element_query(player->source[0]->parser, query)) {
-        gint64 position;
-        gst_query_parse_position(query, NULL, &position);
-        return GST_TIME_AS_MSECONDS(position);
-    } else {
-        return -1;
-    }
+    return element_query_position(player->source[player->source_id]->parser);
 }
 
 void player_seek(Player *player, gint64 ms)
@@ -63,20 +33,11 @@ void player_pause(Player *player)
     gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
 }
 
-static gboolean timeout_duration_query(Server *server)
+static void player_set_song_callback(gint64 duration, Server *server)
 {
     gint64 position;
-    gint64 duration;
-
-    duration = player_get_duration(server->player);
-
-    if (duration < 0) {
-        return TRUE; /* Repeat timer */
-    }
-
 
     position = player_get_position(server->player);
-
     position = position < 0 ? 0 : position;
 
     ResponsePlaying response = {
@@ -86,133 +47,18 @@ static gboolean timeout_duration_query(Server *server)
     };
 
     jsonio_broadcast_packet(server, jsonio_response_playing_packet(&response));
-
-    return FALSE;
-}
-
-static gboolean set_source_song0(GstElement *source, Song song)
-{
-    gchar *path;
-
-    gst_element_set_state(source, GST_STATE_READY);
-
-    path = g_build_filename(MUSIC_DIR, song.artist, song.album, song.name, NULL);
-
-    g_object_set(source, "location", path, NULL);
-
-    g_free(path);
-
-    return gst_element_sync_state_with_parent(source);
-}
-
-static gboolean set_source_song_async(GstElement *source, Song song)
-{
-    GstStateChangeReturn ret;
-
-    ret = set_source_song0(source, song);
-
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        g_warning("State change failed");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static gboolean set_source_song_sync(GstElement *source, Song song)
-{
-    GstStateChangeReturn ret;
-
-    ret = set_source_song0(source, song);
-
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        g_warning("State change failed");
-        return FALSE;
-    } else if (ret == GST_STATE_CHANGE_ASYNC) {
-        g_print("Async state change\n");
-        gst_element_get_state(source, NULL, NULL, GST_SECOND*2);
-    } else {
-        g_print("Sync state change\n");
-    }
-
-    return TRUE;
 }
 
 gboolean player_set_song(Player *player, Song song)
 {
-    gst_element_set_state(player->source[0]->bin, GST_STATE_READY);
+    gst_element_set_state(player->source[player->source_id]->bin, GST_STATE_READY);
 
-    set_source_song_sync(player->source[0]->filesrc, song);
-
-    if (timeout_duration_query(player->server)) {
-        g_timeout_add(5, (GSourceFunc)timeout_duration_query, player->server);
+    if (!source_set_song_sync(player->source[player->source_id]->filesrc, song)) {
+        return FALSE;
     }
 
-    return TRUE;
-}
-
-typedef struct _DurationQuery DurationQuery;
-
-typedef void (*SongDurationQueryCallback)(Song song, gint64 duration);
-
-struct _DurationQuery {
-    Song song;
-    GstElement *pipeline;
-    SongDurationQueryCallback callback;
-};
-
-
-static gboolean song_duration_query_timeout(DurationQuery *query)
-{
-    gint64 duration;
-
-    duration = element_query_duration(query->pipeline);
-
-    if (duration < 0) {
-        return TRUE; /* Repeat timer */
-    }
-
-    query->callback(query->song, duration);
-
-    gst_element_set_state(query->pipeline, GST_STATE_NULL);
-
-    gst_object_unref(GST_OBJECT(query->pipeline));
-
-    return FALSE;
-}
-
-gboolean song_duration_query(Song song, SongDurationQueryCallback callback)
-{
-    DurationQuery *query;
-    GstElement *source, *parser, *sink;
-
-    query = g_new0(DurationQuery, 1);
-
-    query->song = song;
-    query->callback = callback;
-
-    query->pipeline = gst_pipeline_new("duration-query");
-    g_assert(query->pipeline);
-
-    source = gst_element_factory_make("filesrc", NULL);
-    g_assert(source);
-
-    parser = gst_element_factory_make("mpegaudioparse", NULL);
-    g_assert(parser);
-
-    sink = gst_element_factory_make("fakesink", NULL);
-    g_assert(sink);
-
-    gst_bin_add_many(GST_BIN(query->pipeline),
-        source, parser, sink, NULL);
-
-    gst_element_link_many(source, parser, sink, NULL);
-
-    set_source_song_async(source, song);
-
-    gst_element_set_state(query->pipeline, GST_STATE_PLAYING);
-
-    g_timeout_add(5, (GSourceFunc)song_duration_query_timeout, query);
+    element_query_duration_async(player->source[player->source_id]->parser,
+        (ElementDurationQueryCallback)player_set_song_callback, player->server);
 
     return TRUE;
 }
@@ -428,7 +274,7 @@ void player_init(Player *player)
         g_print("Song: %s, duration: %ld\n", song.name, dur);
     }
 
-    song_duration_query((Song) {"Daft Punk", "Random Access Memories", "Touch"}, cb);
+    song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, cb);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 }

@@ -8,7 +8,7 @@ CFLAGS += `pkg-config --cflags gstreamer-1.0`
 
 LIBS=`pkg-config --libs gstreamer-1.0 json-glib-1.0`
 
-_OBJ=main.o player.o jsongen.o jsonparse.o jsonio.o handler.o server.o
+_OBJ=main.o player.o jsongen.o jsonparse.o jsonio.o handler.o server.o gst_utils.o
 OBJ=$(patsubst %,obj/%,$(_OBJ))
 
 all: mediaserver
