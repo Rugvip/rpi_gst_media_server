@@ -263,10 +263,9 @@ void player_init(Player *player)
     g_object_set(player->equalizer, "band2", 2.0,  NULL);
     g_object_set(player->equalizer, "band3", 1.0,  NULL);
 
-    g_object_set(player->source[0]->filesrc, "location",
-        "/home/rugvip/music/Daft Punk/Random Access Memories/Contact", NULL);
-    g_object_set(player->source[1]->filesrc, "location",
-        "/home/rugvip/music/Daft Punk/Random Access Memories/Get Lucky", NULL);
+    source_set_song_async(player->source[0]->filesrc, (Song){"Youtube Mixes", "Industrial", "Dark Modulator V"});
+    // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
+    source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
