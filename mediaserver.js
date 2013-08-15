@@ -1,73 +1,64 @@
-var app  = require('http').createServer(requestHandler)
-  , io   = require('socket.io').listen(app)
-  , _    = require('underscore')
-  , a_   = require('async')
-  , fs   = require('fs')
-  , net  = require('net')
-  , path = require('path')
+"use strict";
+
+var http     = require('http'),
+    socketio = require('socket.io'),
+    _        = require('underscore'),
+    a_       = require('async'),
+    fs       = require('fs'),
+    net      = require('net'),
+    music    = require('./js/music'),
+    gst      = require('./js/server'),
+    path     = require('path');
 
 require('colors');
 
-var MUSIC_DIR = process.env.HOME + '/music'
-var PORT = 80;
+var PORT = 8080;
 
-var db = {};
+var getTable,
+    postTable,
+    server = http.createServer(function (req, res) {
+        console.log(req.url);
+        if (req.method === 'GET') {
+            if (getTable[req.url]) {
+                getTable[req.url](req, res);
+            } else {
+                res.writeHead(404, {
+                    'Content-Type': 'text/plain'
+                });
+                res.end("Not found");
+            }
+        }
+        if (req.method === 'POST') {
+            if (postTable[req.url]) {
+                postTable[req.url](req, res);
+            } else {
+                res.writeHead(404);
+                res.end();
+            }
+        }
+    }),
+    io = socketio.listen(server);
 
-app.listen(PORT);
+gst.start();
 
+server.listen(PORT);
 console.log("Server listening to port %d", PORT);
 
-fs.readdir(MUSIC_DIR, function (err, artists) {
-    a_.each(artists, function (artist, artistCallback) {
-        db[artist] = Object.create(null);
-        fs.readdir(MUSIC_DIR + '/' + artist, function (err, albums) {
-            a_.each(albums, function (album, albumCallback) {
-                fs.readdir(MUSIC_DIR + '/' + artist + '/' + album, function (err, songs) {
-                    db[artist][album] = songs;
-                    albumCallback(err);
-                });
-            }, function (err) {
-                artistCallback(err);
-            });
-        });
-    }, function (err) {
-        if (err) {
-            console.err("Error reading media files %j", err);
-        }
-        console.log("Done reading media files");
-    });
+music.on('load', function (err) {
+    if (err) {
+        console.err("Error reading media files %j", err);
+    }
+    console.log("Done reading media files");
 });
 
-function requestHandler(req, res) {
-    console.log(req.url);
-    if (req.method === 'GET') {
-        if (getTable[req.url]) {
-            getTable[req.url](req, res);
-        } else {
-            res.writeHead(404, {
-                'Content-Type': 'text/plain'
-            });
-            res.end("Not found");
-        }
-    }
-    if (req.method === 'POST') {
-        if (postTable[req.url]) {
-            postTable[req.url](req, res);
-        } else {
-            res.writeHead(404);
-            res.end();
-        }
-    }
-};
-
-var staticResponse = function(file, type) {
+var staticResponse = function (file, type) {
     return function (req, res) {
         res.writeHead(200, {
             'Content-Type': type
         });
         fs.createReadStream(__dirname + '/www/' + file).pipe(res);
-    }
-}
+    };
+};
 
 var getTable = {
     '/favicon.ico': staticResponse('img/favicon.ico', 'image/icon'),
@@ -78,7 +69,7 @@ var getTable = {
     '/underscore.js': staticResponse('js/underscore.js', 'application/ecmascript'),
     '/bootstrap.js': staticResponse('js/bootstrap.js', 'application/ecmascript'),
     '/get': function (req, res) {
-        var body = JSON.stringify(db);
+        var body = JSON.stringify(music);
         res.writeHead(200, {
             'Content-Length': body.length,
             'Content-Type': 'text/json'
@@ -96,7 +87,7 @@ var getTable = {
             action: 'stop'
         });
     }
-}
+};
 
 var postTable = {
     '/post': function (req, res) {
@@ -111,11 +102,11 @@ var postTable = {
             }
         });
     }
-}
+};
 
 var mediaRequestActionTable = {
     'play': function (req, res, obj) {
-        if (!obj.artist || ! obj.album || !obj.song) {
+        if (!obj.artist || !obj.album || !obj.song) {
             return;
         }
         var file = path.join(MUSIC_DIR, obj.artist, obj.album, obj.song);
@@ -124,22 +115,6 @@ var mediaRequestActionTable = {
             file: file
         });
     }
-}
-
-// Connect to media server an set up event handlers
-var mediaServer = function() {
-    var socket = net.createConnection(3264);
-    socket.setEncoding('ascii');
-
-    socket.on('data', function (data) {
-        console.log(data);
-        io.sockets.emit('playback', data);
-    });
-    return socket;
-}();
-
-var mediaServerRequest = function (jsonReq) {
-    mediaServer.write(JSON.stringify(jsonReq));
 };
 
 io.sockets.on('connection', function (socket) {
