@@ -1,6 +1,6 @@
 #include "gst_utils.h"
 
-const gchar *const MUSIC_DIR = "/home/rugvip/music";
+const gchar *const MUSIC_DIR = "/home/rugvip/Music";
 
 gint64 element_query_duration(GstElement *element)
 {
