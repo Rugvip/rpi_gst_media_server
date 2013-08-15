@@ -19,7 +19,7 @@ static void async_client_connection_read(GObject *obj, GAsyncResult *res, Client
         client->buffer_len = len;
 
         if (len > CLIENT_BUFFER_SIZE / 2) {
-            g_print("Received buffer with size %ld, DDOS!?\n", len);
+            g_printerr("Received buffer with size %ld, DDOS!?\n", len);
         }
 
         jsonio_read_request(client);
@@ -56,7 +56,7 @@ static Client *client_new(Server *server, GSocketConnection *connection)
             NULL);
 
         client->remote_address = g_inet_address_to_string(remote_address);
-        g_print("Incoming connection %s:%d\n",
+        g_printerr("Incoming connection %s:%d\n",
             client->remote_address, client->remote_port);
     }
 
@@ -101,8 +101,8 @@ static void client_close_async(GSocketConnection *con, GAsyncResult *res, Client
 
     GDateTime *now = g_date_time_new_now_local();
     GTimeSpan diff = g_date_time_difference(now, client->connection_time);
-    g_print("Closing connection to %s:%d\n", client->remote_address, client->remote_port);
-    g_print("Connected for %lud %luh %lum %lus\n",
+    g_printerr("Closing connection to %s:%d\n", client->remote_address, client->remote_port);
+    g_printerr("Connected for %lud %luh %lum %lus\n",
         diff / G_TIME_SPAN_DAY,
         (diff / G_TIME_SPAN_HOUR) % 24,
         (diff / G_TIME_SPAN_MINUTE) % 60,

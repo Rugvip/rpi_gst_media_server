@@ -77,10 +77,10 @@ gboolean source_set_song_sync(GstElement *source, Song song)
         g_warning("Set song state change failed\n");
         return FALSE;
     } else if (ret == GST_STATE_CHANGE_ASYNC) {
-        g_print("Set song async state change\n");
+        g_printerr("Set song async state change\n");
         gst_element_get_state(source, NULL, NULL, 2 * GST_SECOND);
     } else {
-        g_print("Sync state change\n");
+        g_printerr("Sync state change\n");
     }
 
     return TRUE;

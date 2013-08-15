@@ -9,9 +9,9 @@
 
 int main(int argc, const char *argv[])
 {
-    g_print("Starting %s\n", argv[0]);
+    g_printerr("Starting %s\n", argv[0]);
     if (argc > 1) {
-        g_print("Wai u passing arguments?");
+        g_printerr("Wai u passing arguments?");
     }
 
     Server *server;

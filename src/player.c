@@ -16,13 +16,13 @@ gint64 player_get_position(Player *player)
 void player_seek(Player *player, gint64 ms)
 {
     gboolean ret;
-    g_print("Seek to %ld\n", ms);
+    g_printerr("Seek to %ld\n", ms);
     ret = gst_element_seek_simple(player->source[0]->decoder,
                                   GST_FORMAT_TIME,
                                   GST_SEEK_FLAG_ACCURATE,
                                   ms * GST_MSECOND);
     if(ret) {
-        g_print("seek done\n");
+        g_printerr("seek done\n");
     } else {
         g_warning("seek failed\n");
     }
@@ -66,7 +66,7 @@ gboolean player_set_song(Player *player, Song song)
 static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
 {
     UNUSED(bus);
-    // g_print("Bus call %s\n", gst_message_type_get_name(GST_MESSAGE_TYPE(msg)));
+    // g_printerr("Bus call %s\n", gst_message_type_get_name(GST_MESSAGE_TYPE(msg)));
     gint64 t = 0;
     GstFormat fmt;
     switch (GST_MESSAGE_TYPE(msg)) {
@@ -74,23 +74,23 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
         GstTagList *tags = NULL;
 
         gst_message_parse_tag(msg, &tags);
-        // g_print("Got tags from element %s\n", GST_OBJECT_NAME(msg->src));
-        // g_print("Tags: %s\n", gst_tag_list_to_string(tags));
+        // g_printerr("Got tags from element %s\n", GST_OBJECT_NAME(msg->src));
+        // g_printerr("Tags: %s\n", gst_tag_list_to_string(tags));
         gst_tag_list_free(tags);
         break;
     }
     case GST_MESSAGE_DURATION_CHANGED:
         gst_message_parse_duration(msg, &fmt, &t);
-        g_print("New duration: %ld\n", t);
+        g_printerr("New duration: %ld\n", t);
         break;
     case GST_MESSAGE_SEGMENT_DONE:
         // gst_element_seek(player->source[0]->decoder, 1.0, GST_FORMAT_TIME,
         //     GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_ACCURATE,
         //     GST_SEEK_TYPE_SET, 22000 * GST_MSECOND, GST_SEEK_TYPE_SET, (30000) * GST_MSECOND);
-        g_print("Segment done\n");
+        g_printerr("Segment done\n");
         break;
     case GST_MESSAGE_EOS:
-        g_print("End of stream\n");
+        g_printerr("End of stream\n");
         gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
         break;
 
@@ -231,7 +231,7 @@ void player_init(Player *player)
 
     gboolean xfade(Player *player)
     {
-        // g_print("Hi %2.2f %2.2f %2.2f\n", vol, fabs(vol), 1.0 - fabs(vol));
+        // g_printerr("Hi %2.2f %2.2f %2.2f\n", vol, fabs(vol), 1.0 - fabs(vol));
         g_object_set(player->source[0]->adderPad, "volume", fabs(vol), NULL);
         g_object_set(player->source[1]->adderPad, "volume", 1.0 - fabs(vol), NULL);
         vol += 0.02;
@@ -267,10 +267,10 @@ void player_init(Player *player)
     // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
     source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
 
-    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
 
     void cb(Song song, gint64 dur) {
-        g_print("Song: %s, duration: %ld\n", song.name, dur);
+        g_printerr("Song: %s, duration: %ld\n", song.name, dur);
     }
 
     song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, cb);
@@ -280,14 +280,28 @@ void player_init(Player *player)
 
 void player_start(Player *player)
 {
-    g_print("Running...\n");
+    g_printerr("Running...\n");
     g_main_loop_run(player->main_loop);
 
-    g_print("Returned, stopping playback\n");
+    g_printerr("Returned, stopping playback\n");
     gst_element_set_state(player->pipeline, GST_STATE_NULL);
 
-    g_print("Deleting pipeline\n");
+    g_printerr("Deleting pipeline\n");
     gst_object_unref(GST_OBJECT(player->pipeline));
     g_source_remove(player->bus_watch_id);
     g_main_loop_unref(player->main_loop);
+
+    GOutputStream *out = g_unix_output_stream_new(3, TRUE);
+
+    GError *err = NULL;
+
+    // GFileIOStream fios = g_file_open_readwrite("fifo", NULL, &err);
+
+    gssize s = g_output_stream_write(out, "Hello!", 7, NULL, &err);
+
+    if (err) {
+        g_printerr("Error: %s\n", err->message);
+    } else {
+        g_printerr("Written %ld\n", s);
+    }
 }

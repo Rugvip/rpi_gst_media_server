@@ -5,7 +5,7 @@
 void handle_info_request(RequestInfo *request)
 {
     UNUSED(request);
-    g_print("Got info request\n");
+    g_printerr("Got info request\n");
 
     Player *player;
 
@@ -22,7 +22,7 @@ void handle_info_request(RequestInfo *request)
 
 void handle_play_request(RequestPlay *request)
 {
-    g_print("Got play request %s/%s/%s %ld\n", request->song.artist
+    g_printerr("Got play request %s/%s/%s %ld\n", request->song.artist
         ,request->song.album, request->song.name, request->time);
 
     if (!player_set_song(request->request.client->server->player, request->song)) {
@@ -34,7 +34,7 @@ void handle_play_request(RequestPlay *request)
 
 void handle_pause_request(RequestPause *request)
 {
-    g_print("Got pause request %ld\n", request->time);
+    g_printerr("Got pause request %ld\n", request->time);
 
     Player *player;
 
@@ -45,29 +45,29 @@ void handle_pause_request(RequestPause *request)
 
 void handle_next_request(RequestNext *request)
 {
-    g_print("Got next request %s %s %s %ld\n", request->song.artist
+    g_printerr("Got next request %s %s %s %ld\n", request->song.artist
         , request->song.album, request->song.name, request->time);
 }
 
 void handle_seek_request(RequestSeek *request)
 {
-    g_print("Got seek request %ld\n", request->time);
+    g_printerr("Got seek request %ld\n", request->time);
     player_seek(request->request.client->server->player, request->time);
 }
 
 void handle_volume_request(RequestVolume *request)
 {
-    g_print("Got volume request %f\n", request->volume);
+    g_printerr("Got volume request %f\n", request->volume);
 }
 
 void handle_eq_request(RequestEq *request)
 {
     gint i;
-    g_print("Got eq request");
+    g_printerr("Got eq request");
 
     for (i = 0; i < NUM_EQ_BANDS; ++i) {
-        g_print(" %3.2f", request->bands[i]);
+        g_printerr(" %3.2f", request->bands[i]);
     }
 
-    g_print("\n");
+    g_printerr("\n");
 }
