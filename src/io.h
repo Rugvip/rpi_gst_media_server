@@ -3,8 +3,7 @@
 
 #include "common.h"
 
-Server *server_new();
-void server_init(Server *server);
-void server_start(Server *server, gint port);
+void io_init(Player *player);
+void io_close(Player *player);
 
 #endif /* server_h */
