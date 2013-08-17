@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 
-#define REQUEST(obj) ((Request *) (obj))
+#define INPUT(obj) ((Input *) (obj))
 
 static const gchar *get_string(JsonObject *object, const gchar *name)
 {
@@ -81,163 +81,163 @@ static JsonArray *get_array(JsonObject *object, const gchar *name)
     return json_node_get_array(node);
 }
 
-Request *read_info_request(JsonObject *object)
+static Input *read_input_info(JsonObject *object)
 {
-    RequestInfo *request;
+    InputInfo *input;
 
     UNUSED(object);
 
-    request = g_new0(RequestInfo, 1);
+    input = g_new0(InputInfo, 1);
 
-    request->request.type = REQUEST_INFO;
+    input->input.type = INPUT_INFO;
 
-    return REQUEST(request);
+    return INPUT(input);
 }
 
-Request *read_play_request(JsonObject *object)
+static Input *read_input_play(JsonObject *object)
 {
-    RequestPlay *request;
+    InputPlay *input;
     const gchar *artist, *album, *song;
 
-    request = g_new0(RequestPlay, 1);
+    input = g_new0(InputPlay, 1);
 
-    request->request.type = REQUEST_PLAY;
+    input->input.type = INPUT_PLAY;
 
     artist = get_string(object, "artist");
     album = get_string(object, "album");
     song = get_string(object, "song");
 
     if (artist && album && song) {
-        request->song.artist = artist;
-        request->song.album = album;
-        request->song.name = song;
+        input->song.artist = artist;
+        input->song.album = album;
+        input->song.name = song;
 
-        if (get_int(object, "time", &request->time)) {
-            return REQUEST(request);
+        if (get_int(object, "time", &input->time)) {
+            return INPUT(input);
         }
     }
-    g_free(request);
+    g_free(input);
     return NULL;
 }
 
-Request *read_pause_request(JsonObject *object)
+static Input *read_input_pause(JsonObject *object)
 {
-    RequestPause *request;
+    InputPause *input;
 
-    request = g_new0(RequestPause, 1);
+    input = g_new0(InputPause, 1);
 
-    request->request.type = REQUEST_PAUSE;
+    input->input.type = INPUT_PAUSE;
 
-    if (get_int(object, "time", &request->time)) {
-        return REQUEST(request);
+    if (get_int(object, "time", &input->time)) {
+        return INPUT(input);
     }
-    g_free(request);
+    g_free(input);
     return NULL;
 }
 
-Request *read_next_request(JsonObject *object)
+static Input *read_input_next(JsonObject *object)
 {
-    RequestNext *request;
+    InputNext *input;
     const gchar *artist, *album, *song;
 
-    request = g_new0(RequestNext, 1);
+    input = g_new0(InputNext, 1);
 
-    request->request.type = REQUEST_NEXT;
+    input->input.type = INPUT_NEXT;
 
     artist = get_string(object, "artist");
     album = get_string(object, "album");
     song = get_string(object, "song");
 
     if (artist && album && song) {
-        request->song.artist = artist;
-        request->song.album = album;
-        request->song.name = song;
+        input->song.artist = artist;
+        input->song.album = album;
+        input->song.name = song;
 
-        if (get_int(object, "time", &request->time)) {
-            return REQUEST(request);
+        if (get_int(object, "time", &input->time)) {
+            return INPUT(input);
         }
     }
-    g_free(request);
+    g_free(input);
     return NULL;
 }
 
-Request *read_seek_request(JsonObject *object)
+static Input *read_input_seek(JsonObject *object)
 {
-    RequestSeek *request;
+    InputSeek *input;
 
-    request = g_new0(RequestSeek, 1);
+    input = g_new0(InputSeek, 1);
 
-    request->request.type = REQUEST_SEEK;
+    input->input.type = INPUT_SEEK;
 
-    if (get_int(object, "time", &request->time)) {
-        return REQUEST(request);
+    if (get_int(object, "time", &input->time)) {
+        return INPUT(input);
     }
 
-    g_free(request);
+    g_free(input);
     return NULL;
 }
 
-Request *read_volume_request(JsonObject *object)
+static Input *read_input_volume(JsonObject *object)
 {
-    RequestVolume *request;
+    InputVolume *input;
 
-    request = g_new0(RequestVolume, 1);
+    input = g_new0(InputVolume, 1);
 
-    request->request.type = REQUEST_VOLUME;
+    input->input.type = INPUT_VOLUME;
 
-    if (get_double(object, "volume", &request->volume)) {
-        return REQUEST(request);
+    if (get_double(object, "volume", &input->volume)) {
+        return INPUT(input);
     }
 
-    g_free(request);
+    g_free(input);
     return NULL;
 }
 
-void read_eq_foreach(JsonArray *array, guint i, JsonNode *node, RequestEq *request)
+static void read_eq_foreach(JsonArray *array, guint i, JsonNode *node, InputEq *input)
 {
     UNUSED(array);
 
     if (!JSON_NODE_HOLDS_VALUE(node)) {
-        request->bands[i] = NAN;
+        input->bands[i] = NAN;
     }
 
     if (json_node_get_value_type(node) != G_TYPE_DOUBLE) {
-        request->bands[i] = NAN;
+        input->bands[i] = NAN;
     }
 
-    request->bands[i] = json_node_get_double(node);
+    input->bands[i] = json_node_get_double(node);
 }
 
-Request *read_eq_request(JsonObject *object)
+static Input *read_input_eq(JsonObject *object)
 {
-    RequestEq *request;
+    InputEq *input;
     JsonArray *array;
     gint i;
 
-    request = g_new0(RequestEq, 1);
+    input = g_new0(InputEq, 1);
 
-    request->request.type = REQUEST_EQ;
+    input->input.type = INPUT_EQ;
 
     array = get_array(object, "bands");
 
     if (!array || json_array_get_length(array) != NUM_EQ_BANDS) {
-        g_free(request);
+        g_free(input);
         return NULL;
     }
 
-    json_array_foreach_element(array, (JsonArrayForeach) read_eq_foreach, request);
+    json_array_foreach_element(array, (JsonArrayForeach) read_eq_foreach, input);
 
     for (i = 0; i < NUM_EQ_BANDS; i++) {
-        if (isnan(request->bands[i])) {
-            g_free(request);
+        if (isnan(input->bands[i])) {
+            g_free(input);
             return NULL;
         }
     }
 
-    return REQUEST(request);
+    return INPUT(input);
 }
 
-JsonObject *safe_read_packet(JsonNode *root)
+static JsonObject *safe_read_input(JsonNode *root)
 {
     if (!root) {
         g_warning("Invalid json received: root is null\n");
@@ -252,7 +252,7 @@ JsonObject *safe_read_packet(JsonNode *root)
     return json_node_get_object(root);
 }
 
-const gchar *safe_read_type(JsonObject *object)
+static const gchar *safe_read_type(JsonObject *object)
 {
     if (!object) {
         return NULL;
@@ -280,11 +280,11 @@ const gchar *safe_read_type(JsonObject *object)
     return json_node_get_string(typeNode);
 }
 
-Request *jsonparse_read_request(Client *client, JsonParser *parser)
+Input *jsonparse_read_input(Client *client, JsonParser *parser)
 {
     GError *error = NULL;
     gboolean success;
-    Request *request = NULL;
+    Input *input = NULL;
 
     success = json_parser_load_from_data(parser, client->buffer, client->buffer_len, &error);
 
@@ -292,31 +292,31 @@ Request *jsonparse_read_request(Client *client, JsonParser *parser)
         JsonObject *rootObject;
         const gchar *str;
 
-        rootObject = safe_read_packet(json_parser_get_root(parser));
+        rootObject = safe_read_input(json_parser_get_root(parser));
         str = safe_read_type(rootObject);
 
         if (str) {
             if (!strncmp(str, "info", 5)) {
-                request = read_info_request(rootObject);
+                input = read_input_info(rootObject);
             } else if (!strncmp(str, "play", 6)) {
-                request = read_play_request(rootObject);
+                input = read_input_play(rootObject);
             } else if (!strncmp(str, "pause", 6)) {
-                request = read_pause_request(rootObject);
+                input = read_input_pause(rootObject);
             } else if (!strncmp(str, "next", 5)) {
-                request = read_next_request(rootObject);
+                input = read_input_next(rootObject);
             } else if (!strncmp(str, "seek", 5)) {
-                request = read_seek_request(rootObject);
+                input = read_input_seek(rootObject);
             } else if (!strncmp(str, "volume", 5)) {
-                request = read_volume_request(rootObject);
+                input = read_input_volume(rootObject);
             } else if (!strncmp(str, "eq", 5)) {
-                request = read_eq_request(rootObject);
+                input = read_input_eq(rootObject);
             }
         }
 
-        if (request == NULL) {
+        if (input == NULL) {
             g_warning("Malformed packet: %s\n", client->buffer);
         } else {
-            request->client = client;
+            input->client = client;
         }
     } else {
         if (error) {
@@ -326,5 +326,5 @@ Request *jsonparse_read_request(Client *client, JsonParser *parser)
         }
     }
 
-    return request;
+    return input;
 }

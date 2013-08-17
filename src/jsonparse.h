@@ -4,6 +4,6 @@
 #include "common.h"
 #include <json-glib/json-glib.h>
 
-Input *jsonparse_read_request(Player *, JsonParser *);
+Input *jsonparse_read_input(Player *, JsonParser *);
 
 #endif /* jsonparse_h */
