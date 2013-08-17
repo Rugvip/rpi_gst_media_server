@@ -1,6 +1,6 @@
 
 #include "common.h"
-#include "server.h"
+#include "io.h"
 #include "player.h"
 
 #include <json-glib/json-glib.h>
@@ -14,15 +14,14 @@ int main(int argc, const char *argv[])
         g_printerr("Wai u passing arguments?");
     }
 
-    Server *server;
+    Player *player;
 
-    server = server_new();
-    server->player = player_new(server);
+    player = player_new();
 
-    server_init(server);
-    player_init(server->player);
+    io_init(player);
+    player_init(player);
 
-    server_start(server, PORT);
-    player_start(server->player);
+    player_start(player);
+    io_start(player);
     return 0;
 }
