@@ -4,10 +4,10 @@
 #include "common.h"
 #include <json-glib/json-glib.h>
 
-void jsongen_playing(GOutputStream *,Song song, gint duration, gint position);
-void jsongen_paused(GOutputStream *,gint position);
-void jsongen_eq(GOutputStream *,gdouble gain[NUM_EQ_BANDS]);
-void jsongen_volume(GOutputStream *,gdouble volume);
-void jsongen_info(GOutputStream *,Song song, gint duration, gint position);
+void jsongen_playing(OutputPlaying *);
+void jsongen_paused(OutputPaused *);
+void jsongen_eq(OutputEq *);
+void jsongen_volume(OutputVolume *);
+void jsongen_info(OutputInfo *);
 
 #endif /* jsongen_h */

@@ -3,12 +3,12 @@
 
 #include "common.h"
 
-void handle_info_request(RequestInfo *);
-void handle_play_request(RequestPlay *);
-void handle_pause_request(RequestPause *);
-void handle_next_request(RequestNext *);
-void handle_seek_request(RequestSeek *);
-void handle_volume_request(RequestVolume *);
-void handle_eq_request(RequestEq *);
+void handler_info(InputInfo *);
+void handler_play(InputPlay *);
+void handler_pause(InputPause *);
+void handler_next(InputNext *);
+void handler_seek(InputSeek *);
+void handler_volume(InputVolume *);
+void handler_eq(InputEq *);
 
 #endif /* handler_h */

@@ -10,7 +10,7 @@
 
 #define PLAYER(obj) ((Player *) (obj))
 #define CALLBACK(func) ((Callback) func)
-#define REQUEST_HANDLER(obj) ((RequestHandler) (obj))
+#define Input_HANDLER(obj) ((InputHandler) (obj))
 
 #define NUM_EQ_BANDS 10
 #define CLIENT_BUFFER_SIZE 1024
@@ -18,23 +18,32 @@
 const gchar *const MUSIC_DIR;
 
 typedef enum {
-    REQUEST_INFO,
-    REQUEST_PLAY,
-    REQUEST_PAUSE,
-    REQUEST_NEXT,
-    REQUEST_SEEK,
-    REQUEST_VOLUME,
-    REQUEST_EQ,
-    NUM_REQUEST_TYPES,
-} RequestType;
+    INPUT_INFO,
+    INPUT_PLAY,
+    INPUT_PAUSE,
+    INPUT_NEXT,
+    INPUT_SEEK,
+    INPUT_VOLUME,
+    INPUT_EQ,
+    NUM_INPUT_TYPES,
+} InputType;
+
+typedef enum {
+    OUTPUT_PLAYING,
+    OUTPUT_PAUSED,
+    OUTPUT_EQ,
+    OUTPUT_VOLUME,
+    OUTPUT_INFO,
+    NUM_OUTPUT_TYPES,
+} OutputType;
 
 typedef struct _MP3Source MP3Source;
 typedef struct _Player Player;
 typedef struct _Song Song;
 typedef struct _JsonPacket JsonPacket;
-typedef struct _Request Request;
+typedef struct _Input Input;
 
-typedef void (*RequestHandler)(Request *);
+typedef void (*InputHandler)(Input *);
 
 struct _JsonPacket {
     void *priv;
@@ -68,83 +77,93 @@ struct _Player {
     gssize buffer_len;
 
     GDateTime *server_start_time;
-    RequestHandler handlers[NUM_REQUEST_TYPES];
+    InputHandler handlers[NUM_INPUT_TYPES];
 
     gint source_id;
 };
 
-struct _Request {
-    RequestType type;
+struct _Input {
+    InputType type;
     Player *player;
 };
 
-/* Request to send information */
+/* Input to send information */
 typedef struct {
-    Request request;
-} RequestInfo;
+    Input input;
+} InputInfo;
 
 /* Song to play starting at time */
 typedef struct {
-    Request request;
+    Input input;
     Song song;
     gint64 time;
-} RequestPlay;
+} InputPlay;
 
 /* Pause the playing song and seek to time */
 typedef struct {
-    Request request;
+    Input input;
     gint64 time;
-} RequestPause;
+} InputPause;
 
 /* The next song to be played */
 typedef struct {
-    Request request;
+    Input input;
     Song song;
     gint64 time;
-} RequestNext;
+} InputNext;
 
 /* Seek to a specific time */
 typedef struct {
-    Request request;
+    Input input;
     gint64 time;
-} RequestSeek;
+} InputSeek;
 
 /* Set volume */
 typedef struct {
-    Request request;
+    Input input;
     gdouble volume;
-} RequestVolume;
+} InputVolume;
 
 /* Set equalizer settings */
 typedef struct {
-    Request request;
+    Input input;
     gdouble bands[NUM_EQ_BANDS];
-} RequestEq;
+} InputEq;
 
 
 
 typedef struct {
+    OutputType type;
+    Player *player;
+} Output;
+
+typedef struct {
+    Output output;
     Song song;
     gint64 duration;
     gint64 position;
-} ResponsePlaying;
+} OutputPlaying;
 
 typedef struct {
+    Output output;
     gint64 time;
-} ResponsePaused;
+} OutputPaused;
 
 typedef struct {
+    Output output;
     gdouble bands[NUM_EQ_BANDS];
-} ResponseEq;
+} OutputEq;
 
 typedef struct {
+    Output output;
     gdouble volume;
-} ResponseVolume;
+} OutputVolume;
 
 typedef struct {
+    Output output;
     Song song;
     gint64 duration;
     gint64 position;
-} ResponseInfo;
+} OutputInfo;
 
 #endif /* common_h */
