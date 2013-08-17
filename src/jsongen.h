@@ -2,14 +2,12 @@
 #define jsongen_h
 
 #include "common.h"
+#include <json-glib/json-glib.h>
 
-void jsongen_free_packet(JsonPacket *);
-void jsongen_write_packet(GOutputStream *, JsonPacket *);
-
-JsonPacket *jsongen_playing(Song song, gint duration, gint position);
-JsonPacket *jsongen_paused(gint position);
-JsonPacket *jsongen_eq(gdouble gain[NUM_EQ_BANDS]);
-JsonPacket *jsongen_volume(gdouble volume);
-JsonPacket *jsongen_info(Song song, gint duration, gint position);
+void jsongen_playing(GOutputStream *,Song song, gint duration, gint position);
+void jsongen_paused(GOutputStream *,gint position);
+void jsongen_eq(GOutputStream *,gdouble gain[NUM_EQ_BANDS]);
+void jsongen_volume(GOutputStream *,gdouble volume);
+void jsongen_info(GOutputStream *,Song song, gint duration, gint position);
 
 #endif /* jsongen_h */

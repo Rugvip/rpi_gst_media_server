@@ -8,8 +8,7 @@
 
 #define UNUSED(obj) while(0){(void)obj;}
 
-#define CLIENT(obj) ((Client *) (obj))
-#define SERVER(obj) ((Server *) (obj))
+#define PLAYER(obj) ((Player *) (obj))
 #define CALLBACK(func) ((Callback) func)
 #define REQUEST_HANDLER(obj) ((RequestHandler) (obj))
 
@@ -31,8 +30,6 @@ typedef enum {
 
 typedef struct _MP3Source MP3Source;
 typedef struct _Player Player;
-typedef struct _Server Server;
-typedef struct _Client Client;
 typedef struct _Song Song;
 typedef struct _JsonPacket JsonPacket;
 typedef struct _Request Request;
@@ -64,34 +61,21 @@ struct _Player {
 
     GMainLoop *main_loop;
     guint bus_watch_id;
-    Server *server;
+
+    GInputStream *in;
+    GOutputStream *out;
+    gchar buffer[CLIENT_BUFFER_SIZE];
+    gssize buffer_len;
+
+    GDateTime *server_start_time;
+    RequestHandler handlers[NUM_REQUEST_TYPES];
 
     gint source_id;
 };
 
-struct _Server {
-    GPtrArray *clients;
-    GDateTime *server_start_time;
-    Player *player;
-    GSocketService *service;
-    RequestHandler handlers[NUM_REQUEST_TYPES];
-};
-
-struct _Client {
-    GSocketConnection *connection;
-    GInputStream *in;
-    GOutputStream *out;
-    gchar *remote_address;
-    guint remote_port;
-    GDateTime *connection_time;
-    Server *server;
-    gchar buffer[CLIENT_BUFFER_SIZE];
-    gssize buffer_len;
-};
-
 struct _Request {
     RequestType type;
-    Client *client;
+    Player *player;
 };
 
 /* Request to send information */

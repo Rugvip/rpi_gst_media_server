@@ -3,16 +3,9 @@
 
 #include "common.h"
 
-JsonPacket *jsonio_response_playing_packet(ResponsePlaying *response);
-JsonPacket *jsonio_response_paused_packet(ResponsePaused *response);
-JsonPacket *jsonio_response_eq_packet(ResponseEq *response);
-JsonPacket *jsonio_response_volume_packet(ResponseVolume *response);
-JsonPacket *jsonio_response_info_packet(ResponseInfo *response);
+void jsonio_read(Player *);
+void jsonio_write(Player *, Output *);
 
-void jsonio_read_request(Client *);
-void jsonio_set_request_handler(Server *, RequestType, RequestHandler);
-
-void jsonio_send_packet(Client *, JsonPacket *);
-void jsonio_broadcast_packet(Server *, JsonPacket *);
+void jsonio_set_input_handler(Player *, InputType, InputHandler);
 
 #endif /* jsonio_h */
