@@ -3,12 +3,12 @@
 
 #include "common.h"
 
-void handler_info(InputInfo *);
-void handler_play(InputPlay *);
-void handler_pause(InputPause *);
-void handler_next(InputNext *);
-void handler_seek(InputSeek *);
-void handler_volume(InputVolume *);
-void handler_eq(InputEq *);
+void handler_handle_info(InputInfo *);
+void handler_handle_play(InputPlay *);
+void handler_handle_pause(InputPause *);
+void handler_handle_next(InputNext *);
+void handler_handle_seek(InputSeek *);
+void handler_handle_volume(InputVolume *);
+void handler_handle_eq(InputEq *);
 
 #endif /* handler_h */
