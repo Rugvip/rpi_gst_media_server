@@ -2,57 +2,34 @@
 #include "jsongen.h"
 #include "jsonparse.h"
 
-JsonPacket *jsonio_response_playing_packet(ResponsePlaying *response)
-{
-    return jsongen_playing(response->song, response->duration, response->position);
-}
-
-JsonPacket *jsonio_response_paused_packet(ResponsePaused *response)
-{
-    return jsongen_paused(response->time);
-
-}
-
-JsonPacket *jsonio_response_eq_packet(ResponseEq *response)
-{
-    return jsongen_eq(response->bands);
-
-}
-
-JsonPacket *jsonio_response_volume_packet(ResponseVolume *response)
-{
-    return jsongen_volume(response->volume);
-
-}
-
 JsonPacket *jsonio_response_info_packet(ResponseInfo *response)
 {
     return jsongen_info(response->song, response->duration, response->position);
 }
 
 
-void jsonio_read_request(Client *client)
+void jsonio_read(Player *player)
 {
-    Request *request;
+    Input *input;
     JsonParser *parser;
 
     parser = json_parser_new();
-    request = jsonparse_read_request(client, parser);
+    input = jsonparse_read_input(player, parser);
 
-    if (!request) {
+    if (!input) {
         g_object_unref(G_OBJECT(parser));
         return;
     }
 
-    client->server->handlers[request->type](request);
+    player->handlers[input->type](input);
 
     g_object_unref(G_OBJECT(parser));
-    g_free(request);
+    g_free(input);
 }
 
-void jsonio_set_request_handler(Server *server, RequestType type, RequestHandler handler)
+void jsonio_set_input_handler(Player *player, InputType type, InputHandler handler);
 {
-    server->handlers[type] = handler;
+    player->handlers[type] = handler;
 }
 
 void jsonio_send_packet(Client *client, JsonPacket *packet)
@@ -61,15 +38,29 @@ void jsonio_send_packet(Client *client, JsonPacket *packet)
     jsongen_free_packet(packet);
 }
 
-void jsonio_broadcast_packet(Server *server, JsonPacket *packet)
+void jsonio_write(Player *player, gpointer _output)
 {
-    gint i;
-    GPtrArray *clients = server->clients;
-    gint len = server->clients->len;
+    Output *output;
 
-    for (i = 0; i < len; ++i) {
-        jsongen_write_packet(((Client *) g_ptr_array_index(clients, i))->out, packet);
+    output = OUTPUT(_output);
+
+    switch(output->type) {
+    case OUTPUT_PLAYING:
+        jsongen_playing((OutputPlaying *)(output));
+        break;
+    case OUTPUT_PAUSED:
+        jsongen_paused((OutputPaused *)(output));
+        break;
+    case OUTPUT_EQ:
+        jsongen_eq((OutputEq *)(output));
+        break;
+    case OUTPUT_VOLUME:
+        jsongen_volume((OutputVolume *)(output));
+        break;
+    case OUTPUT_INFO:
+        jsongen_info((OutputInfo *)(output));
+        break;
+    default:
+        g_warning("Invalid output type\n");
     }
-
-    jsongen_free_packet(packet);
 }
