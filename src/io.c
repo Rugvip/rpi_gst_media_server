@@ -39,6 +39,7 @@ static void io_read_async(GObject *obj, GAsyncResult *res, Player *player)
 void io_init(Player *player)
 {
     player->in = g_unix_input_stream_new(0, FALSE);
+    g_assert(player->in);
     player->out = g_unix_output_stream_new(1, FALSE);
 
     player->start_time = g_date_time_new_now_local();

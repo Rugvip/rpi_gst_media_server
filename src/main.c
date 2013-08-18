@@ -18,7 +18,7 @@ int main(int argc, const char *argv[])
 
     io_init(player);
 
-    player_start(player);
     io_start(player);
+    player_start(player);
     return 0;
 }

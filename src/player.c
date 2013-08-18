@@ -273,7 +273,7 @@ Player *player_init(Player *player)
     // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
     source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
 
-    gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
     void cb(Song song, gint64 dur) {
         g_printerr("Song: %s, duration: %ld\n", song.name, dur);
