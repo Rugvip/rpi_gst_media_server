@@ -1,7 +1,6 @@
 #include "player.h"
 #include "gst_utils.h"
 
-#include <gio/gunixoutputstream.h>
 #include <math.h>
 
 gint64 player_get_duration(Player *player)
@@ -298,18 +297,4 @@ void player_start(Player *player)
     gst_object_unref(GST_OBJECT(player->pipeline));
     g_source_remove(player->bus_watch_id);
     g_main_loop_unref(player->main_loop);
-
-    GOutputStream *out = g_unix_output_stream_new(3, TRUE);
-
-    GError *err = NULL;
-
-    // GFileIOStream fios = g_file_open_readwrite("fifo", NULL, &err);
-
-    gssize s = g_output_stream_write(out, "Hello!", 7, NULL, &err);
-
-    if (err) {
-        g_printerr("Error: %s\n", err->message);
-    } else {
-        g_printerr("Written %ld\n", s);
-    }
 }
