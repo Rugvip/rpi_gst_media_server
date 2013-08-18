@@ -1,5 +1,5 @@
 
-#include "server.h"
+#include "io.h"
 #include "jsonio.h"
 #include "handler.h"
 
@@ -30,17 +30,18 @@ static void io_read_async(GObject *obj, GAsyncResult *res, Player *player)
     } else {
         if (err) {
             g_warning("Error reading input stream, %s\n", err->message);
+        } else {
+            g_warning("Unknown error reading input stream\n");
         }
-        g_ptr_array_remove(player->server->players, player);
     }
 }
 
 void io_init(Player *player)
 {
-    player->in = g_unix_input_stream_new(stdin, FALSE);
-    player->out = g_unix_output_stream_new(stdout, FALSE);
+    player->in = g_unix_input_stream_new(0, FALSE);
+    player->out = g_unix_output_stream_new(1, FALSE);
 
-    player->player_start_time = g_date_time_new_now_local();
+    player->start_time = g_date_time_new_now_local();
 
     jsonio_set_input_handler(player, INPUT_INFO,   INPUT_HANDLER(handler_handle_info));
     jsonio_set_input_handler(player, INPUT_PLAY,   INPUT_HANDLER(handler_handle_play));
@@ -57,20 +58,21 @@ void io_start(Player *player)
         NULL, (GAsyncReadyCallback) io_read_async, player);
 }
 
-static void io_close_async(GSocketConnection *con, GAsyncResult *res, Player *player)
-{
-    GError *error = NULL;
-    if (!g_io_stream_close_finish(G_IO_STREAM(con), res, &error)) {
-        if (error) {
-            g_warning("Error closing connection: %s\n", error->message);
-        } else {
-            g_warning("Json parser failed without error\n");
-        }
-    }
-
-
 void io_close(Player *player)
 {
-    g_io_stream_close_async(G_IO_STREAM(player->connection), G_PRIORITY_DEFAULT,
-        NULL, (GAsyncReadyCallback) io_close_async, player);
+    GError *error = NULL;
+
+    g_input_stream_close(player->in, NULL, &error);
+
+    if (error) {
+        g_warning("Error closing input stream: %s\n", error->message);
+        g_clear_error(&error);
+    }
+
+    g_output_stream_close(player->out, NULL, &error);
+
+    if (error) {
+        g_warning("Error closing output stream: %s\n", error->message);
+        g_clear_error(&error);
+    }
 }

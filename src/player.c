@@ -51,7 +51,7 @@ static void player_set_song_callback(gint64 duration, Player *player)
         .position = position,
     };
 
-    jsonio_write(player, &output);
+    jsonio_write(&output);
 }
 
 gboolean player_set_song(Player *player, Song song)

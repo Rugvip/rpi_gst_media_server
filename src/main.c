@@ -5,21 +5,18 @@
 
 #include <json-glib/json-glib.h>
 
-#define PORT 3264
-
 int main(int argc, const char *argv[])
 {
+    Player *player;
+
     g_printerr("Starting %s\n", argv[0]);
     if (argc > 1) {
         g_printerr("Wai u passing arguments?");
     }
 
-    Player *player;
-
-    player = player_new();
+    player = player_init(player_alloc());
 
     io_init(player);
-    player_init(player);
 
     player_start(player);
     io_start(player);

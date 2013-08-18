@@ -280,13 +280,13 @@ static const gchar *safe_read_type(JsonObject *object)
     return json_node_get_string(typeNode);
 }
 
-Input *jsonparse_read_input(Client *client, JsonParser *parser)
+Input *jsonparse_read_input(Player *player, JsonParser *parser)
 {
     GError *error = NULL;
     gboolean success;
     Input *input = NULL;
 
-    success = json_parser_load_from_data(parser, client->buffer, client->buffer_len, &error);
+    success = json_parser_load_from_data(parser, player->buffer, player->buffer_len, &error);
 
     if (success) {
         JsonObject *rootObject;
@@ -314,9 +314,9 @@ Input *jsonparse_read_input(Client *client, JsonParser *parser)
         }
 
         if (input == NULL) {
-            g_warning("Malformed packet: %s\n", client->buffer);
+            g_warning("Malformed packet: %s\n", player->buffer);
         } else {
-            input->client = client;
+            input->player = player;
         }
     } else {
         if (error) {

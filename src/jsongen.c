@@ -1,7 +1,5 @@
 #include "jsongen.h"
 
-#include "server.h"
-
 #include <glib.h>
 #include <json-glib/json-glib.h>
 
@@ -32,8 +30,7 @@ static void write_packet(Output *output, JsonBuilder *builder)
 
 void jsongen_playing(OutputPlaying *output)
 {
-    JsonPacket *packet = json_packet_new();
-    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+    JsonBuilder *builder = json_builder_new();
 
     json_builder_begin_object(builder);
 
@@ -51,8 +48,7 @@ void jsongen_playing(OutputPlaying *output)
 
 void jsongen_paused(OutputPaused *output)
 {
-    JsonPacket *packet = json_packet_new();
-    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+    JsonBuilder *builder = json_builder_new();
 
     json_builder_begin_object(builder);
 
@@ -67,8 +63,7 @@ void jsongen_paused(OutputPaused *output)
 void jsongen_eq(OutputEq *output)
 {
     int i;
-    JsonPacket *packet = json_packet_new();
-    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+    JsonBuilder *builder = json_builder_new();
 
     json_builder_begin_object(builder);
 
@@ -87,8 +82,7 @@ void jsongen_eq(OutputEq *output)
 
 void jsongen_volume(OutputVolume *output)
 {
-    JsonPacket *packet = json_packet_new();
-    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+    JsonBuilder *builder = json_builder_new();
 
     json_builder_begin_object(builder);
 
@@ -102,8 +96,7 @@ void jsongen_volume(OutputVolume *output)
 
 void jsongen_info(OutputInfo *output)
 {
-    JsonPacket *packet = json_packet_new();
-    JsonBuilder *builder = JSON_PACKET_BUILDER(packet);
+    JsonBuilder *builder = json_builder_new();
 
     json_builder_begin_object(builder);
 

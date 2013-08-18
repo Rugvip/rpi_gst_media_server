@@ -10,10 +10,10 @@
 
 #define PLAYER(obj) ((Player *) (obj))
 #define CALLBACK(func) ((Callback) func)
-#define Input_HANDLER(obj) ((InputHandler) (obj))
+#define INPUT_HANDLER(obj) ((InputHandler) (obj))
 
 #define NUM_EQ_BANDS 10
-#define CLIENT_BUFFER_SIZE 1024
+#define INPUT_BUFFER_SIZE 1024
 
 const gchar *const MUSIC_DIR;
 
@@ -73,10 +73,10 @@ struct _Player {
 
     GInputStream *in;
     GOutputStream *out;
-    gchar buffer[CLIENT_BUFFER_SIZE];
+    gchar buffer[INPUT_BUFFER_SIZE];
     gssize buffer_len;
 
-    GDateTime *server_start_time;
+    GDateTime *start_time;
     InputHandler handlers[NUM_INPUT_TYPES];
 
     gint source_id;

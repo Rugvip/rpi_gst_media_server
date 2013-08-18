@@ -2,7 +2,7 @@
 #include "handler.h"
 #include "player.h"
 
-void handle_info_input(InputInfo *input)
+void handler_handle_info(InputInfo *input)
 {
     g_printerr("Got info input\n");
 
@@ -10,16 +10,20 @@ void handle_info_input(InputInfo *input)
 
     player = input->input.player;
 
-    ResponsePlaying response = {
+    OutputPlaying output = {
+        .output = {
+            .player = player,
+            .type = OUTPUT_PLAYING,
+        },
         .song = player->source[0]->song,
         .duration = player_get_duration(player),
         .position = player_get_position(player),
     };
 
-    jsonio_send_packet(input->input.client, jsonio_response_playing_packet(&response));
+    jsonio_write(&output);
 }
 
-void handle_play_input(InputPlay *input)
+void handler_handle_play(InputPlay *input)
 {
     g_printerr("Got play input %s/%s/%s %ld\n", input->song.artist
         ,input->song.album, input->song.name, input->time);
@@ -31,7 +35,7 @@ void handle_play_input(InputPlay *input)
     player_seek(input->input.player, input->time);
 }
 
-void handle_pause_input(InputPause *input)
+void handler_handle_pause(InputPause *input)
 {
     g_printerr("Got pause input %ld\n", input->time);
 
@@ -42,24 +46,24 @@ void handle_pause_input(InputPause *input)
     player_seek(player, input->time);
 }
 
-void handle_next_input(InputNext *input)
+void handler_handle_next(InputNext *input)
 {
     g_printerr("Got next input %s %s %s %ld\n", input->song.artist
         , input->song.album, input->song.name, input->time);
 }
 
-void handle_seek_input(InputSeek *input)
+void handler_handle_seek(InputSeek *input)
 {
     g_printerr("Got seek input %ld\n", input->time);
     player_seek(input->input.player, input->time);
 }
 
-void handle_volume_input(InputVolume *input)
+void handler_handle_volume(InputVolume *input)
 {
     g_printerr("Got volume input %f\n", input->volume);
 }
 
-void handle_eq_input(InputEq *input)
+void handler_handle_eq(InputEq *input)
 {
     gint i;
     g_printerr("Got eq input");
