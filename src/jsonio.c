@@ -2,12 +2,6 @@
 #include "jsongen.h"
 #include "jsonparse.h"
 
-JsonPacket *jsonio_response_info_packet(ResponseInfo *response)
-{
-    return jsongen_info(response->song, response->duration, response->position);
-}
-
-
 void jsonio_read(Player *player)
 {
     Input *input;
@@ -27,22 +21,16 @@ void jsonio_read(Player *player)
     g_free(input);
 }
 
-void jsonio_set_input_handler(Player *player, InputType type, InputHandler handler);
+void jsonio_set_input_handler(Player *player, InputType type, InputHandler handler)
 {
     player->handlers[type] = handler;
 }
 
-void jsonio_send_packet(Client *client, JsonPacket *packet)
-{
-    jsongen_write_packet(client->out, packet);
-    jsongen_free_packet(packet);
-}
-
-void jsonio_write(Player *player, gpointer _output)
+void jsonio_write(gpointer _output)
 {
     Output *output;
 
-    output = OUTPUT(_output);
+    output = (Output *)(_output);
 
     switch(output->type) {
     case OUTPUT_PLAYING:
