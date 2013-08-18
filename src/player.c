@@ -1,6 +1,7 @@
 #include "player.h"
 #include "gst_utils.h"
 
+#include <gio/gunixoutputstream.h>
 #include <math.h>
 
 gint64 player_get_duration(Player *player)
@@ -33,20 +34,24 @@ void player_pause(Player *player)
     gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
 }
 
-static void player_set_song_callback(gint64 duration, Server *server)
+static void player_set_song_callback(gint64 duration, Player *player)
 {
     gint64 position;
 
-    position = player_get_position(server->player);
+    position = player_get_position(player);
     position = position < 0 ? 0 : position;
 
-    ResponsePlaying response = {
-        .song = server->player->source[0]->song,
+    OutputPlaying output = {
+        .output = {
+            .type = OUTPUT_PLAYING,
+            .player = player,
+        },
+        .song = player->source[0]->song,
         .duration = duration,
         .position = position,
     };
 
-    jsonio_broadcast_packet(server, jsonio_response_playing_packet(&response));
+    jsonio_write(player, &output);
 }
 
 gboolean player_set_song(Player *player, Song song)
@@ -58,7 +63,7 @@ gboolean player_set_song(Player *player, Song song)
     }
 
     element_query_duration_async(player->source[player->source_id]->parser,
-        (ElementDurationQueryCallback)player_set_song_callback, player->server);
+        (ElementDurationQueryCallback)player_set_song_callback, player);
 
     return TRUE;
 }
@@ -112,7 +117,7 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
     return TRUE;
 }
 
-static MP3Source *mp3_source_new()
+static MP3Source *mp3_source_alloc()
 {
     MP3Source *source;
 
@@ -121,22 +126,21 @@ static MP3Source *mp3_source_new()
     return source;
 }
 
-Player *player_new(Server *server)
+Player *player_alloc()
 {
     Player *player;
 
     player = g_new0(Player, 1);
 
-    player->source[0] = mp3_source_new();
-    player->source[1] = mp3_source_new();
-    player->server = server;
+    player->source[0] = mp3_source_alloc();
+    player->source[1] = mp3_source_alloc();
 
     player->source_id = 0;
 
     return player;
 }
 
-static void mp3_source_init(MP3Source *src, const gchar *name)
+static MP3Source *mp3_source_init(MP3Source *src, const gchar *name)
 {
     src->filesrc = gst_element_factory_make("filesrc"        , "file-src");
     g_assert(src->filesrc);
@@ -158,6 +162,8 @@ static void mp3_source_init(MP3Source *src, const gchar *name)
     gst_object_unref(GST_OBJECT(src->pad));
 
     gst_object_ref(src->bin);
+
+    return src;
 }
 
 static GstPadProbeReturn pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, Player *player)
@@ -171,7 +177,7 @@ static GstPadProbeReturn pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, Player
 }
 
 gdouble vol = -1.0;
-void player_init(Player *player)
+Player *player_init(Player *player)
 {
     GstBus *bus;
 
@@ -276,6 +282,8 @@ void player_init(Player *player)
     song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, cb);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
+
+    return player;
 }
 
 void player_start(Player *player)
