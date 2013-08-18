@@ -3,9 +3,9 @@
 #include "jsonio.h"
 #include "handler.h"
 
+#include <gio/gunixinputstream.h>
+#include <gio/gunixoutputstream.h>
 #include <string.h>
-
-#define IN_BUFFER_SIZE 1024
 
 static void io_read_async(GObject *obj, GAsyncResult *res, Player *player)
 {
@@ -37,22 +37,24 @@ static void io_read_async(GObject *obj, GAsyncResult *res, Player *player)
 
 void io_init(Player *player)
 {
-    player->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
-    player->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
+    player->in = g_unix_input_stream_new(stdin, FALSE);
+    player->out = g_unix_output_stream_new(stdout, FALSE);
 
-    g_input_stream_read_async(player->in, player->buffer, IN_BUFFER_SIZE, G_PRIORITY_DEFAULT,
+    player->player_start_time = g_date_time_new_now_local();
+
+    jsonio_set_input_handler(player, INPUT_INFO,   INPUT_HANDLER(handler_handle_info));
+    jsonio_set_input_handler(player, INPUT_PLAY,   INPUT_HANDLER(handler_handle_play));
+    jsonio_set_input_handler(player, INPUT_PAUSE,  INPUT_HANDLER(handler_handle_pause));
+    jsonio_set_input_handler(player, INPUT_NEXT,   INPUT_HANDLER(handler_handle_next));
+    jsonio_set_input_handler(player, INPUT_SEEK,   INPUT_HANDLER(handler_handle_seek));
+    jsonio_set_input_handler(player, INPUT_VOLUME, INPUT_HANDLER(handler_handle_volume));
+    jsonio_set_input_handler(player, INPUT_EQ,     INPUT_HANDLER(handler_handle_eq));
+}
+
+void io_start(Player *player)
+{
+    g_input_stream_read_async(player->in, player->buffer, INPUT_BUFFER_SIZE, G_PRIORITY_DEFAULT,
         NULL, (GAsyncReadyCallback) io_read_async, player);
-
-    server->server_start_time = g_date_time_new_now_local();
-
-    jsonio_set_input_handler(server, INPUT_INFO,   INPUT_HANDLER(handler_handle_info));
-    jsonio_set_input_handler(server, INPUT_PLAY,   INPUT_HANDLER(handler_handle_play));
-    jsonio_set_input_handler(server, INPUT_PAUSE,  INPUT_HANDLER(handler_handle_pause));
-    jsonio_set_input_handler(server, INPUT_NEXT,   INPUT_HANDLER(handler_handle_next));
-    jsonio_set_input_handler(server, INPUT_SEEK,   INPUT_HANDLER(handler_handle_seek));
-    jsonio_set_input_handler(server, INPUT_VOLUME, INPUT_HANDLER(handler_handle_volume));
-    jsonio_set_input_handler(server, INPUT_EQ,     INPUT_HANDLER(handler_handle_eq));
-
 }
 
 static void io_close_async(GSocketConnection *con, GAsyncResult *res, Player *player)
