@@ -2,7 +2,6 @@
 #define pipeline_h
 
 #include "common.h"
-#include "jsonio.h"
 
 G_BEGIN_DECLS
 

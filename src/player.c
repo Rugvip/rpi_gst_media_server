@@ -40,17 +40,8 @@ static void player_set_song_callback(gint64 duration, Player *player)
     position = player_get_position(player);
     position = position < 0 ? 0 : position;
 
-    OutputPlaying output = {
-        .output = {
-            .type = OUTPUT_PLAYING,
-            .player = player,
-        },
-        .song = player->source[0]->song,
-        .duration = duration,
-        .position = position,
-    };
-
-    jsonio_write(&output);
+    UNUSED(duration);
+    // TODO: Playing callback
 }
 
 gboolean player_set_song(Player *player, Song song)
@@ -273,21 +264,6 @@ Player *player_init(Player *player)
     source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
-
-    void cb(Song song, gint64 duration, Player *player) {
-        OutputPlaying output = {
-            .output = {
-                .type = OUTPUT_DURATION_RESULT,
-                .player = player,
-            },
-            .song = song,
-            .duration = duration,
-        };
-
-        jsonio_write(&output);
-    }
-
-    song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, (SongDurationQueryCallback) cb, player);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 

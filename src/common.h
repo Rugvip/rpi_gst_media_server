@@ -10,46 +10,14 @@
 
 #define PLAYER(obj) ((Player *) (obj))
 #define CALLBACK(func) ((Callback) func)
-#define INPUT_HANDLER(obj) ((InputHandler) (obj))
 
 #define NUM_EQ_BANDS 10
-#define INPUT_BUFFER_SIZE 1024
 
 #define MUSIC_DIR "/home/rugvip/Music"
-
-typedef enum {
-    INPUT_INFO,
-    INPUT_PLAY,
-    INPUT_PAUSE,
-    INPUT_NEXT,
-    INPUT_SEEK,
-    INPUT_VOLUME,
-    INPUT_EQ,
-    INPUT_DURATION_QUERY,
-    NUM_INPUT_TYPES,
-} InputType;
-
-typedef enum {
-    OUTPUT_PLAYING,
-    OUTPUT_PAUSED,
-    OUTPUT_EQ,
-    OUTPUT_VOLUME,
-    OUTPUT_INFO,
-    OUTPUT_DURATION_RESULT,
-    NUM_OUTPUT_TYPES,
-} OutputType;
 
 typedef struct _MP3Source MP3Source;
 typedef struct _Player Player;
 typedef struct _Song Song;
-typedef struct _JsonPacket JsonPacket;
-typedef struct _Input Input;
-
-typedef void (*InputHandler)(Input *);
-
-struct _JsonPacket {
-    void *priv;
-};
 
 struct _Song {
     const gchar *artist;
@@ -73,66 +41,56 @@ struct _Player {
     GMainLoop *main_loop;
     guint bus_watch_id;
 
-    GInputStream *in;
-    GOutputStream *out;
-    gchar buffer[INPUT_BUFFER_SIZE];
-    gssize buffer_len;
-
     GDateTime *start_time;
-    InputHandler handlers[NUM_INPUT_TYPES];
 
     gint source_id;
 };
 
-struct _Input {
-    InputType type;
-    Player *player;
-};
-
-/* Input to send information */
+/*
+// Input to send information
 typedef struct {
     Input input;
 } InputInfo;
 
-/* Song to play starting at time */
+// Song to play starting at time
 typedef struct {
     Input input;
     Song song;
     gint64 time;
 } InputPlay;
 
-/* Pause the playing song and seek to time */
+// Pause the playing song and seek to time
 typedef struct {
     Input input;
     gint64 time;
 } InputPause;
 
-/* The next song to be played */
+// The next song to be played
 typedef struct {
     Input input;
     Song song;
     gint64 time;
 } InputNext;
 
-/* Seek to a specific time */
+// Seek to a specific time
 typedef struct {
     Input input;
     gint64 time;
 } InputSeek;
 
-/* Set volume */
+// Set volume
 typedef struct {
     Input input;
     gdouble volume;
 } InputVolume;
 
-/* Set equalizer settings */
+// Set equalizer settings
 typedef struct {
     Input input;
     gdouble bands[NUM_EQ_BANDS];
 } InputEq;
 
-/* Query the duration of a song */
+// Query the duration of a song
 typedef struct {
     Input input;
     Song song;
@@ -178,5 +136,7 @@ typedef struct {
     Song song;
     gint64 duration;
 } OutputDurationResult;
+
+*/
 
 #endif /* common_h */
