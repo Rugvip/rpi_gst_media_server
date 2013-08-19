@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+G_BEGIN_DECLS
+
 typedef void (*SongDurationQueryCallback)(Song, gint64 duration, gpointer user_data);
 typedef void (*ElementDurationQueryCallback)(gint64 duration, gpointer user_data);
 
@@ -12,5 +14,7 @@ gboolean source_set_song_async(GstElement *, Song);
 gboolean source_set_song_sync(GstElement *, Song);
 void element_query_duration_async(GstElement *, ElementDurationQueryCallback, gpointer user_data);
 void song_query_duration(Song, SongDurationQueryCallback, gpointer user_data);
+
+G_END_DECLS
 
 #endif /* gst_utils_h */
