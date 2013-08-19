@@ -15,7 +15,7 @@
 #define NUM_EQ_BANDS 10
 #define INPUT_BUFFER_SIZE 1024
 
-const gchar *const MUSIC_DIR;
+#define MUSIC_DIR "/home/rugvip/Music"
 
 typedef enum {
     INPUT_INFO,
