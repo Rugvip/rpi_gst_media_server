@@ -322,7 +322,7 @@ Input *jsonparse_read_input(Player *player, JsonParser *parser)
         if (str) {
             if (!strncmp(str, "info", 5)) {
                 input = read_input_info(rootObject);
-            } else if (!strncmp(str, "play", 6)) {
+            } else if (!strncmp(str, "play", 5)) {
                 input = read_input_play(rootObject);
             } else if (!strncmp(str, "pause", 6)) {
                 input = read_input_pause(rootObject);
@@ -330,10 +330,12 @@ Input *jsonparse_read_input(Player *player, JsonParser *parser)
                 input = read_input_next(rootObject);
             } else if (!strncmp(str, "seek", 5)) {
                 input = read_input_seek(rootObject);
-            } else if (!strncmp(str, "volume", 5)) {
+            } else if (!strncmp(str, "volume", 7)) {
                 input = read_input_volume(rootObject);
-            } else if (!strncmp(str, "eq", 5)) {
+            } else if (!strncmp(str, "eq", 3)) {
                 input = read_input_eq(rootObject);
+            } else if (!strncmp(str, "duration_query", 15)) {
+                input = read_input_duration_query(rootObject);
             }
         }
 
