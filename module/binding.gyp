@@ -1,15 +1,11 @@
 {
     "targets": [
         {
-            "target_name": "test",
+            "target_name": "net_player",
             "sources": [
-                "test.cc",
+                "net_player.cc",
+                "gst_player.cc",
                 "../src/gst_utils.c",
-                "../src/handler.c",
-                "../src/io.c",
-                "../src/jsongen.c",
-                "../src/jsonio.c",
-                "../src/jsonparse.c",
                 "../src/main.c",
                 "../src/player.c",
             ],

@@ -8,7 +8,7 @@
 
 class GstPlayer : public node::ObjectWrap {
     public:
-        static void Init(v8::Handle<v8::Object> exports);
+        static void Initialize(v8::Handle<v8::Object> exports);
 
     private:
         GstPlayer();

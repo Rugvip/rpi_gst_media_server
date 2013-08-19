@@ -10,7 +10,8 @@ GstPlayer::GstPlayer() {
 };
 GstPlayer::~GstPlayer() {};
 
-Handle<Value> GstPlayer::new_instance(const Arguments& args) {
+Handle<Value> GstPlayer::new_instance(const Arguments& args)
+{
     HandleScope scope;
 
     GstPlayer* obj = new GstPlayer();
@@ -22,16 +23,31 @@ Handle<Value> GstPlayer::new_instance(const Arguments& args) {
     return args.This();
 }
 
-Handle<Value> GstPlayer::init(const Arguments& args) {
+Handle<Value> GstPlayer::init(const Arguments& args)
+{
     HandleScope scope;
+
+    g_print("Initializing player\n");
 
     GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
     player_init(obj->player);
 
-    return scope.Close(Number::New());
+    return scope.Close(Undefined());
 }
 
-void GstPlayer::Init(Handle<Object> exports) {
+Handle<Value> GstPlayer::start(const Arguments& args)
+{
+    HandleScope scope;
+
+    g_print("Starting player\n");
+
+    GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
+    player_start(obj->player);
+
+    return scope.Close(Undefined());
+}
+
+void GstPlayer::Initialize(Handle<Object> exports) {
     // Prepare constructor template
     Local<FunctionTemplate> t = FunctionTemplate::New(new_instance);
     t->SetClassName(String::NewSymbol("GstPlayer"));
@@ -42,6 +58,7 @@ void GstPlayer::Init(Handle<Object> exports) {
 
     Local<ObjectTemplate> instance_t = t->InstanceTemplate();
     instance_t->Set(String::NewSymbol("wat"), Number::New(1337));
+    instance_t->SetInternalFieldCount(1);
 
     exports->Set(String::NewSymbol("GstPlayer"), Persistent<Function>::New(t->GetFunction()));
 }
