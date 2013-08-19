@@ -274,11 +274,11 @@ Player *player_init(Player *player)
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
-    void cb(Song song, gint64 dur) {
+    void cb(Song song, gint64 dur, Player *player) {
         g_printerr("Song: %s, duration: %ld\n", song.name, dur);
     }
 
-    song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, cb);
+    song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, (SongDurationQueryCallback) cb, player);
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 

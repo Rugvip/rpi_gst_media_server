@@ -9,5 +9,6 @@ void jsongen_paused(OutputPaused *);
 void jsongen_eq(OutputEq *);
 void jsongen_volume(OutputVolume *);
 void jsongen_info(OutputInfo *);
+void jsongen_duration_result(OutputDurationResult *);
 
 #endif /* jsongen_h */

@@ -25,6 +25,7 @@ typedef enum {
     INPUT_SEEK,
     INPUT_VOLUME,
     INPUT_EQ,
+    INPUT_DURATION_QUERY,
     NUM_INPUT_TYPES,
 } InputType;
 
@@ -34,6 +35,7 @@ typedef enum {
     OUTPUT_EQ,
     OUTPUT_VOLUME,
     OUTPUT_INFO,
+    OUTPUT_DURATION_RESULT,
     NUM_OUTPUT_TYPES,
 } OutputType;
 
@@ -130,6 +132,11 @@ typedef struct {
     gdouble bands[NUM_EQ_BANDS];
 } InputEq;
 
+/* Query the duration of a song */
+typedef struct {
+    Input input;
+    Song song;
+} InputDurationQuery;
 
 
 typedef struct {
@@ -165,5 +172,11 @@ typedef struct {
     gint64 duration;
     gint64 position;
 } OutputInfo;
+
+typedef struct {
+    Output output;
+    Song song;
+    gint64 duration;
+} OutputDurationResult;
 
 #endif /* common_h */

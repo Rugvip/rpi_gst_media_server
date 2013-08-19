@@ -48,6 +48,9 @@ void jsonio_write(gpointer _output)
     case OUTPUT_INFO:
         jsongen_info((OutputInfo *)(output));
         break;
+    case OUTPUT_DURATION_RESULT:
+        jsongen_duration_result((OutputDurationResult *)(output));
+        break;
     default:
         g_warning("Invalid output type\n");
     }

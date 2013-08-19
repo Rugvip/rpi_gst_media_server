@@ -138,7 +138,7 @@ typedef struct {
 
 static void song_query_duration_callback(gint64 duration, SongDurationQueryData *data)
 {
-    data->callback(data->song, duration);
+    data->callback(data->song, duration, data->user_data);
 
     gst_element_set_state(data->pipeline, GST_STATE_NULL);
 
@@ -147,13 +147,14 @@ static void song_query_duration_callback(gint64 duration, SongDurationQueryData 
     g_free(data);
 }
 
-void song_query_duration(Song song, SongDurationQueryCallback callback)
+void song_query_duration(Song song, SongDurationQueryCallback callback, gpointer user_data)
 {
     SongDurationQueryData *query;
     GstElement *source, *parser, *sink;
 
     query = g_new0(SongDurationQueryData, 1);
 
+    query->user_data = user_data;
     query->song = song;
     query->callback = callback;
 
