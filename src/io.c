@@ -44,13 +44,14 @@ void io_init(Player *player)
 
     player->start_time = g_date_time_new_now_local();
 
-    jsonio_set_input_handler(player, INPUT_INFO,   INPUT_HANDLER(handler_handle_info));
-    jsonio_set_input_handler(player, INPUT_PLAY,   INPUT_HANDLER(handler_handle_play));
-    jsonio_set_input_handler(player, INPUT_PAUSE,  INPUT_HANDLER(handler_handle_pause));
-    jsonio_set_input_handler(player, INPUT_NEXT,   INPUT_HANDLER(handler_handle_next));
-    jsonio_set_input_handler(player, INPUT_SEEK,   INPUT_HANDLER(handler_handle_seek));
-    jsonio_set_input_handler(player, INPUT_VOLUME, INPUT_HANDLER(handler_handle_volume));
-    jsonio_set_input_handler(player, INPUT_EQ,     INPUT_HANDLER(handler_handle_eq));
+    jsonio_set_input_handler(player, INPUT_INFO,           INPUT_HANDLER(handler_handle_info));
+    jsonio_set_input_handler(player, INPUT_PLAY,           INPUT_HANDLER(handler_handle_play));
+    jsonio_set_input_handler(player, INPUT_PAUSE,          INPUT_HANDLER(handler_handle_pause));
+    jsonio_set_input_handler(player, INPUT_NEXT,           INPUT_HANDLER(handler_handle_next));
+    jsonio_set_input_handler(player, INPUT_SEEK,           INPUT_HANDLER(handler_handle_seek));
+    jsonio_set_input_handler(player, INPUT_VOLUME,         INPUT_HANDLER(handler_handle_volume));
+    jsonio_set_input_handler(player, INPUT_EQ,             INPUT_HANDLER(handler_handle_eq));
+    jsonio_set_input_handler(player, INPUT_DURATION_QUERY, INPUT_HANDLER(handler_handle_duration_query));
 }
 
 void io_start(Player *player)

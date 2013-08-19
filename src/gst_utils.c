@@ -133,6 +133,7 @@ void element_query_duration_async(GstElement *element,
 typedef struct {
     Song song;
     GstElement *pipeline;
+    gpointer user_data;
     SongDurationQueryCallback callback;
 } SongDurationQueryData;
 

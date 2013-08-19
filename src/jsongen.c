@@ -111,3 +111,20 @@ void jsongen_info(OutputInfo *output)
 
     write_packet(&output->output, builder);
 }
+
+void jsongen_duration_result(OutputDurationResult *output)
+{
+    JsonBuilder *builder = json_builder_new();
+
+    json_builder_begin_object(builder);
+
+    add_string(builder, "type", "duration_result");
+    add_string(builder, "artist", output->song.artist);
+    add_string(builder, "album", output->song.album);
+    add_string(builder, "song", output->song.name);
+    add_int(builder, "duration", output->duration);
+
+    json_builder_end_object(builder);
+
+    write_packet(&output->output, builder);
+}

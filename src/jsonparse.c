@@ -237,6 +237,30 @@ static Input *read_input_eq(JsonObject *object)
     return INPUT(input);
 }
 
+static Input *read_input_duration_query(JsonObject *object)
+{
+    InputDurationQuery *input;
+    const gchar *artist, *album, *song;
+
+    input = g_new0(InputDurationQuery, 1);
+
+    input->input.type = INPUT_DURATION_QUERY;
+
+    artist = get_string(object, "artist");
+    album = get_string(object, "album");
+    song = get_string(object, "song");
+
+    if (artist && album && song) {
+        input->song.artist = artist;
+        input->song.album = album;
+        input->song.name = song;
+
+        return INPUT(input);
+    }
+    g_free(input);
+    return NULL;
+}
+
 static JsonObject *safe_read_input(JsonNode *root)
 {
     if (!root) {

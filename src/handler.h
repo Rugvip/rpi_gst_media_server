@@ -10,5 +10,6 @@ void handler_handle_next(InputNext *);
 void handler_handle_seek(InputSeek *);
 void handler_handle_volume(InputVolume *);
 void handler_handle_eq(InputEq *);
+void handler_handle_duration_query(InputDurationQuery *input);
 
 #endif /* handler_h */

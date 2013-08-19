@@ -274,8 +274,17 @@ Player *player_init(Player *player)
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 
-    void cb(Song song, gint64 dur, Player *player) {
-        g_printerr("Song: %s, duration: %ld\n", song.name, dur);
+    void cb(Song song, gint64 duration, Player *player) {
+        OutputPlaying output = {
+            .output = {
+                .type = OUTPUT_DURATION_RESULT,
+                .player = player,
+            },
+            .song = song,
+            .duration = duration,
+        };
+
+        jsonio_write(&output);
     }
 
     song_query_duration((Song) {"Daft Punk", "Random Access Memories", "Touch"}, (SongDurationQueryCallback) cb, player);
