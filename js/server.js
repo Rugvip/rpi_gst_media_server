@@ -11,7 +11,7 @@ var http     = require('http'),
     spawn    = require('child_process').spawn;
 
 module.exports.start = function () {
-    var gst;
+    var gst, obj;
 
     console.log("Starting media gst");
 
@@ -28,7 +28,12 @@ module.exports.start = function () {
         console.log("Err: ", data);
     });
 
-    gst.stdin.write("Wat");
+
+    obj = {
+        type: "volume",
+        volume: 1.5
+    };
+    gst.stdin.write(JSON.stringify(obj));
 };
 
 
