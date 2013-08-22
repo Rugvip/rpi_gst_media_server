@@ -17,6 +17,9 @@ class GstPlayer : public node::ObjectWrap {
         static v8::Handle<v8::Value> new_instance(const v8::Arguments& args);
         static v8::Handle<v8::Value> init(const v8::Arguments& args);
         static v8::Handle<v8::Value> start(const v8::Arguments& args);
+        static v8::Handle<v8::Value> iteration(const v8::Arguments& args);
+        static v8::Handle<v8::Value> stop(const v8::Arguments& args);
+        static v8::Handle<v8::Value> query_duration(const v8::Arguments& args);
 
         Player *player;
 };
