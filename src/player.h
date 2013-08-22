@@ -14,6 +14,8 @@ gboolean player_set_song(Player *, Song song);
 Player *player_alloc();
 Player *player_init(Player *);
 void player_start(Player *);
+void player_iteration(Player *);
+void player_stop(Player *);
 
 G_END_DECLS
 

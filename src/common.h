@@ -20,9 +20,9 @@ typedef struct _Player Player;
 typedef struct _Song Song;
 
 struct _Song {
-    const gchar *artist;
-    const gchar *album;
-    const gchar *name;
+    gchar *artist;
+    gchar *album;
+    gchar *name;
 };
 
 struct _MP3Source {

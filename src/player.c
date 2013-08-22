@@ -259,12 +259,6 @@ Player *player_init(Player *player)
     g_object_set(player->equalizer, "band2", 2.0,  NULL);
     g_object_set(player->equalizer, "band3", 1.0,  NULL);
 
-    source_set_song_async(player->source[0]->filesrc, (Song){"Youtube Mixes", "Industrial", "Dark Modulator V"});
-    // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
-    source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
-
-    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
-
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 
     return player;
@@ -273,9 +267,22 @@ Player *player_init(Player *player)
 void player_start(Player *player)
 {
     g_printerr("Running...\n");
-    g_main_loop_run(player->main_loop);
 
-    g_printerr("Returned, stopping playback\n");
+    source_set_song_async(player->source[0]->filesrc, (Song){"Youtube Mixes", "Industrial", "Dark Modulator V"});
+    // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
+    source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
+
+    gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+}
+
+void player_iteration(Player *player)
+{
+    g_main_context_iteration(NULL, FALSE);
+}
+
+void player_stop(Player *player)
+{
+    g_printerr("Stopping playback\n");
     gst_element_set_state(player->pipeline, GST_STATE_NULL);
 
     g_printerr("Deleting pipeline\n");
