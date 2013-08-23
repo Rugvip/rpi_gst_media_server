@@ -13,7 +13,14 @@ int main(int argc, const char *argv[])
         g_printerr("Wai u passing arguments?");
     }
 
-    player = player_init(player_alloc());
+    char *args[] = {
+        "mp3net",
+        "--gst-debug-no-color",
+        "--gst-debug-level=2"
+    };
+
+    player = player_init(player_alloc(),
+        sizeof(args)/sizeof(char *), (char **) args);
 
     player_start(player);
     return 0;

@@ -30,10 +30,62 @@ Handle<Value> GstPlayer::init(const Arguments& args)
 {
     HandleScope scope;
 
-    g_print("Initializing player\n");
-
     GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
-    player_init(obj->player);
+
+    if (args.Length() > 1) {
+        ThrowException(Exception::TypeError(String::New("Too many arguments")));
+        return scope.Close(Undefined());
+    }
+
+    if (args.Length() == 0) {
+        char *argv[] = {
+            "mp3net",
+            "--gst-debug-level=1"
+        };
+
+        player_init(obj->player, 2, (char **) argv);
+    } else {
+        if (!args[0]->IsArray()) {
+            ThrowException(Exception::TypeError(String::New("Invalid argument, argv should be an array")));
+            return scope.Close(Undefined());
+        }
+
+        Local<Array> array = Array::Cast(*args[0]);
+
+        uint32_t length = array->Length() + 1;
+
+        char **argv = (char **) g_malloc0(length * sizeof(char *));
+
+        argv[0] = g_strdup("mp3net");
+
+        for (uint32_t i = 1; i < length; ++i) {
+            Local<Value> member = array->Get(i - 1);
+
+            if (!member->IsString()) {
+                ThrowException(Exception::TypeError(String::New("Invalid argument, array member is not a string")));
+
+                for (uint32_t j = 0; j < i; ++j) {
+                    g_free(argv[j]);
+                }
+                g_free(argv);
+
+                return scope.Close(Undefined());
+            }
+
+            Local<String> str = member->ToString();
+
+            argv[i] = (char *) g_malloc0(str->Length() + 1);
+
+            str->WriteAscii(argv[i]);
+        }
+
+        player_init(obj->player, length, argv);
+
+        for (uint32_t i = 0; i < length; ++i) {
+            g_free(argv[i]);
+        }
+        g_free(argv);
+    }
 
     return scope.Close(Undefined());
 }
@@ -42,22 +94,8 @@ Handle<Value> GstPlayer::start(const Arguments& args)
 {
     HandleScope scope;
 
-    g_print("Starting player\n");
-
     GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
-
     player_start(obj->player);
-
-    return scope.Close(Undefined());
-}
-
-Handle<Value> GstPlayer::iteration(const Arguments& args)
-{
-    HandleScope scope;
-
-    GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
-
-    player_iteration(obj->player);
 
     return scope.Close(Undefined());
 }
@@ -65,8 +103,6 @@ Handle<Value> GstPlayer::iteration(const Arguments& args)
 Handle<Value> GstPlayer::stop(const Arguments& args)
 {
     HandleScope scope;
-
-    g_print("Stopping player\n");
 
     GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
 
@@ -120,15 +156,45 @@ Handle<Value> GstPlayer::query_duration(const Arguments& args)
 
     Local<Object> obj = args[0]->ToObject();
 
-    Local<String> artist = obj->Get(String::NewSymbol("artist"))->ToString();
-    Local<String> album = obj->Get(String::NewSymbol("album"))->ToString();
-    Local<String> name = obj->Get(String::NewSymbol("name"))->ToString();
+    Local<Value> obj_artist = obj->Get(String::NewSymbol("artist"));
+    Local<Value> obj_album = obj->Get(String::NewSymbol("album"));
+    Local<Value> obj_name = obj->Get(String::NewSymbol("name"));
+
+    if (obj_artist->IsUndefined()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument, song has no artist")));
+        return scope.Close(Undefined());
+    }
+    if (obj_album->IsUndefined()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument, song has no album")));
+        return scope.Close(Undefined());
+    }
+    if (obj_name->IsUndefined()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument, song has no name")));
+        return scope.Close(Undefined());
+    }
+
+    if (!obj_artist->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument, artist is not a string")));
+        return scope.Close(Undefined());
+    }
+    if (!obj_album->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument, album is not a string")));
+        return scope.Close(Undefined());
+    }
+    if (!obj_name->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument, song name is not a string")));
+        return scope.Close(Undefined());
+    }
+
+    Local<String> artist = obj_artist->ToString();
+    Local<String> album = obj_album->ToString();
+    Local<String> name = obj_name->ToString();
 
     Song song;
 
-    song.artist = (gchar *) g_malloc0(20),
-    song.album = (gchar *) g_malloc0(20),
-    song.name = (gchar *) g_malloc0(20),
+    song.artist = (gchar *) g_malloc0(artist->Length()),
+    song.album = (gchar *) g_malloc0(album->Length()),
+    song.name = (gchar *) g_malloc0(name->Length()),
 
     artist->WriteAscii(song.artist);
     album->WriteAscii(song.album);
@@ -147,15 +213,13 @@ Handle<Value> GstPlayer::query_duration(const Arguments& args)
 void GstPlayer::Initialize(Handle<Object> exports) {
     // Prepare constructor template
     Persistent<FunctionTemplate> t = Persistent<FunctionTemplate>::New(FunctionTemplate::New(new_instance));
-    t->InstanceTemplate()->SetInternalFieldCount(2);
+    t->InstanceTemplate()->SetInternalFieldCount(1);
     t->SetClassName(String::NewSymbol("GstPlayer"));
 
     t->PrototypeTemplate()->Set(String::NewSymbol("init"),
         FunctionTemplate::New(init)->GetFunction());
     t->PrototypeTemplate()->Set(String::NewSymbol("start"),
         FunctionTemplate::New(start)->GetFunction());
-    t->PrototypeTemplate()->Set(String::NewSymbol("iteration"),
-        FunctionTemplate::New(iteration)->GetFunction());
     t->PrototypeTemplate()->Set(String::NewSymbol("stop"),
         FunctionTemplate::New(stop)->GetFunction());
     t->PrototypeTemplate()->Set(String::NewSymbol("queryDuration"),

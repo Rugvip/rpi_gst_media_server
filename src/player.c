@@ -167,24 +167,13 @@ static GstPadProbeReturn pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, Player
 }
 
 gdouble vol = -1.0;
-Player *player_init(Player *player)
+Player *player_init(Player *player, int argc, char **argv)
 {
     GstBus *bus;
 
     g_setenv("GST_DEBUG_DUMP_DOT_DIR", "/home/rugvip/", TRUE);
 
-
-    char *args[] = {
-        "mp3net",
-        "--gst-debug-no-color",
-        "--gst-debug-level=2"
-    };
-    char **argv = args;
-    int argc = sizeof(args)/sizeof(gchar *);
-
     gst_init(&argc, &argv);
-
-    player->main_loop = g_main_loop_new(NULL, FALSE);
 
     player->pipeline = gst_pipeline_new("mediaplayer");
     g_assert(player->pipeline);
@@ -275,11 +264,6 @@ void player_start(Player *player)
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
 }
 
-void player_iteration(Player *player)
-{
-    g_main_context_iteration(NULL, FALSE);
-}
-
 void player_stop(Player *player)
 {
     g_printerr("Stopping playback\n");
@@ -288,5 +272,4 @@ void player_stop(Player *player)
     g_printerr("Deleting pipeline\n");
     gst_object_unref(GST_OBJECT(player->pipeline));
     g_source_remove(player->bus_watch_id);
-    g_main_loop_unref(player->main_loop);
 }
