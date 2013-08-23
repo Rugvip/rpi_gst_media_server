@@ -1,8 +1,10 @@
+require('../node_modules/gcontext/build/Release/gcontext').init();
+
 var net_player = require('./build/Release/net_player');
 
 var player = new net_player.GstPlayer();
 
-player.init();
+player.init(["--gst-debug-level=2", "--gst-debug-with-color"]);
 
 songs = [
     {
@@ -59,7 +61,3 @@ songs.forEach(function (song) {
         console.log("Song: %j, Duration: %d", ret, duration);
     });
 });
-
-console.log("Started");
-
-setInterval(player.iteration, 5);
