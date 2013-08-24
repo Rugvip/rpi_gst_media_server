@@ -12,7 +12,7 @@ void player_pause(Player *);
 gboolean player_set_song(Player *, Song song);
 
 Player *player_alloc();
-Player *player_init(Player *, int argc, char **argv);
+Player *player_init(Player *);
 void player_start(Player *);
 void player_stop(Player *);
 

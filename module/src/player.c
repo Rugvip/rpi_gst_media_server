@@ -167,13 +167,9 @@ static GstPadProbeReturn pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, Player
 }
 
 gdouble vol = -1.0;
-Player *player_init(Player *player, int argc, char **argv)
+Player *player_init(Player *player)
 {
     GstBus *bus;
-
-    g_setenv("GST_DEBUG_DUMP_DOT_DIR", "/home/rugvip/", TRUE);
-
-    gst_init(&argc, &argv);
 
     player->pipeline = gst_pipeline_new("mediaplayer");
     g_assert(player->pipeline);
@@ -247,8 +243,6 @@ Player *player_init(Player *player, int argc, char **argv)
     g_object_set(player->equalizer, "band1", 3.0,  NULL);
     g_object_set(player->equalizer, "band2", 2.0,  NULL);
     g_object_set(player->equalizer, "band3", 1.0,  NULL);
-
-    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), 0, "graph");
 
     return player;
 }

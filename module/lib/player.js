@@ -14,8 +14,12 @@ Player.prototype.start = function()
 
 Player.prototype.init = function()
 {
-    this.player.init.apply(this.player, arguments);
-    gcontext.init();
+    this.player.init();
 }
 
 module.exports.Player = Player;
+
+module.exports.init = function () {
+    mp3.init.apply(mp3, arguments);
+    gcontext.init();
+};

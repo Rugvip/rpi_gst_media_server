@@ -32,60 +32,12 @@ Handle<Value> GstPlayer::init(const Arguments& args)
 
     GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
 
-    if (args.Length() > 1) {
-        ThrowException(Exception::TypeError(String::New("Too many arguments")));
+    if (args.Length() > 0) {
+        ThrowException(Exception::TypeError(String::New("Too many arguments, should be none")));
         return scope.Close(Undefined());
     }
 
-    if (args.Length() == 0) {
-        char *argv[] = {
-            "mp3net",
-            "--gst-debug-level=1"
-        };
-
-        player_init(obj->player, 2, (char **) argv);
-    } else {
-        if (!args[0]->IsArray()) {
-            ThrowException(Exception::TypeError(String::New("Invalid argument, argv should be an array")));
-            return scope.Close(Undefined());
-        }
-
-        Local<Array> array = Array::Cast(*args[0]);
-
-        uint32_t length = array->Length() + 1;
-
-        char **argv = (char **) g_malloc0(length * sizeof(char *));
-
-        argv[0] = g_strdup("mp3net");
-
-        for (uint32_t i = 1; i < length; ++i) {
-            Local<Value> member = array->Get(i - 1);
-
-            if (!member->IsString()) {
-                ThrowException(Exception::TypeError(String::New("Invalid argument, array member is not a string")));
-
-                for (uint32_t j = 0; j < i; ++j) {
-                    g_free(argv[j]);
-                }
-                g_free(argv);
-
-                return scope.Close(Undefined());
-            }
-
-            Local<String> str = member->ToString();
-
-            argv[i] = (char *) g_malloc0(str->Length() + 1);
-
-            str->WriteAscii(argv[i]);
-        }
-
-        player_init(obj->player, length, argv);
-
-        for (uint32_t i = 0; i < length; ++i) {
-            g_free(argv[i]);
-        }
-        g_free(argv);
-    }
+    player_init(obj->player);
 
     return scope.Close(Undefined());
 }

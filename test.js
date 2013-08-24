@@ -1,11 +1,13 @@
 var gmp3 = require('gmp3');
 
-var player = new gmp3.Player();
-
-player.init([
+gmp3.init([
     "--gst-debug-level=2",
     "--gst-debug-with-color"
 ]);
+
+var player = new gmp3.Player();
+
+player.init();
 player.start();
 
 // songs = [
