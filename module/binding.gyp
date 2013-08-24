@@ -6,7 +6,6 @@
                 "src/net_player.cc",
                 "src/gst_player.cc",
                 "src/gst_utils.c",
-                "src/main.c",
                 "src/player.c",
             ],
             "cflags": [
