@@ -1,10 +1,15 @@
 Gst
- ☐ Switch socket connection to stdio
+ ✔ Simple mode module @done (13-08-24 11:24)
  ☐ Crossfader
  ☐ Next song setup
 
 Node server
- ☐ Start gst server and pipe IO
  ☐ Simple player gui
  ☐ Playlist
  ☐ Play in specific time range
+
+
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ ✘ Switch socket connection to stdio @cancelled (13-08-24 11:18)
+ ✘ Start gst server and pipe IO @cancelled (13-08-24 11:18)
