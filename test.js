@@ -1,41 +1,63 @@
-var net = require('net');
+require('../node_modules/gcontext/build/Release/gcontext').init();
 
-var contact = {
-    type: "play",
-    artist: "Daft Punk",
-    album: "Random Access Memories",
-    song: "Contact",
-    time: 0
-}
+var net_player = require('./build/Release/net_player');
 
-var gonzo = {
-    type: "play",
-    artist: "Youtube Mixes",
-    album: "Hardcore",
-    song: "DJ Gonzo 2.mp3",
-    time: 30000
-}
+var player = new net_player.GstPlayer();
 
-var snow = {
-    type: "play",
-    artist: "Youtube Mixes",
-    album: "Industrial",
-    song: "Snow Styler VI",
-    time: 55000
-}
+player.init(["--gst-debug-level=2", "--gst-debug-with-color"]);
 
-var socket = net.createConnection(3264);
-socket.setEncoding('ascii');
+songs = [
+    {
+        artist: "Youtube Mixes",
+        album: "Hardcore",
+        name: "DJ Gonzo I",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Hardcore",
+        name: "DJ Gonzo II",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Snow Styler VI",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Dark Modulator I",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Dark Modulator II",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Dark Modulator III",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Dark Modulator IV",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Dark Modulator V",
+    },
+    {
+        artist: "Youtube Mixes",
+        album: "Industrial",
+        name: "Dark Modulator VI",
+    },
+];
 
-socket.on('connect', function () {
-    socket.write(JSON.stringify(gonzo));
-    socket.end();
-});
+player.start();
 
-socket.on('end', function () {
-    console.log("Connection closed");
-});
-
-socket.on('data', function (data) {
-    console.log("Recieved data: %s", data);
+songs.forEach(function (song) {
+    player.queryDuration(song, function (ret, duration) {
+        console.log("Song: %j, Duration: %d", ret, duration);
+    });
 });
