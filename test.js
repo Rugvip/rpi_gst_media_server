@@ -7,15 +7,18 @@ gmp3.init([
 
 var player = new gmp3.Player();
 
-player.init();
+player.on('start', function (str) {
+    console.log("Stared: " + str);
+});
+
 player.start();
 
-// songs = [
-//     {
-//         artist: "Youtube Mixes",
-//         album: "Hardcore",
-//         name: "DJ Gonzo I",
-//     },
+songs = [
+    {
+        artist: "Youtube Mixes",
+        album: "Hardcore",
+        name: "DJ Gonzo I",
+    },
 //     {
 //         artist: "Youtube Mixes",
 //         album: "Hardcore",
@@ -56,10 +59,12 @@ player.start();
 //         album: "Industrial",
 //         name: "Dark Modulator VI",
 //     },
-// ];
-
-// songs.forEach(function (song) {
-//     player.queryDuration(song, function (ret, duration) {
-//         console.log("Song: %j, Duration: %d", ret, duration);
-//     });
-// });
+];
+player.wat = "wut";
+songs.forEach(function (song) {
+    var a = player.queryDuration(song, function (ret, duration) {
+        console.log("Song: %j, Duration: %d", ret, duration);
+        console.log("This: ", this);
+    });
+    console.log("ok: " + a);
+});

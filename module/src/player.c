@@ -249,7 +249,7 @@ Player *player_init(Player *player)
 
 void player_start(Player *player)
 {
-    g_printerr("Running...\n");
+    g_printerr("starting...\n");
 
     source_set_song_async(player->source[0]->filesrc, (Song){"Youtube Mixes", "Industrial", "Dark Modulator V"});
     // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
@@ -260,10 +260,9 @@ void player_start(Player *player)
 
 void player_stop(Player *player)
 {
-    g_printerr("Stopping playback\n");
+    g_printerr("...stopping\n");
     gst_element_set_state(player->pipeline, GST_STATE_NULL);
 
-    g_printerr("Deleting pipeline\n");
     gst_object_unref(GST_OBJECT(player->pipeline));
     g_source_remove(player->bus_watch_id);
 }

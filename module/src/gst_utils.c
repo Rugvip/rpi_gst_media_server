@@ -110,12 +110,12 @@ static gboolean element_query_duration_async_timeout(ElementDurationQueryData *d
 void element_query_duration_async(GstElement *element,
     ElementDurationQueryCallback callback, gpointer user_data)
 {
-    ElementDurationQueryData *data;
     gint64 duration;
 
     duration = element_query_duration(element);
 
     if (duration < 0) {
+        ElementDurationQueryData *data;
         data = g_new0(ElementDurationQueryData, 1);
 
         data->callback = callback;

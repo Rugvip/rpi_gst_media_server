@@ -1,4 +1,3 @@
-#define BUILDING_NODE_EXTENSION
 #include <uv.h>
 #include <node.h>
 
@@ -19,27 +18,17 @@ Handle<Value> GstPlayer::new_instance(const Arguments& args)
 
     GstPlayer* obj = new GstPlayer();
 
-    // Local<String> str = args[0]->ToString();
-    // obj->counter_ = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
     obj->Wrap(args.This());
 
-    return args.This();
-}
+    Local<Value> extend = args.This()->Get(String::NewSymbol("_extend"));
 
-Handle<Value> GstPlayer::init(const Arguments& args)
-{
-    HandleScope scope;
-
-    GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
-
-    if (args.Length() > 0) {
-        ThrowException(Exception::TypeError(String::New("Too many arguments, should be none")));
-        return scope.Close(Undefined());
+    if (extend->IsFunction()) {
+        Local<Function>::Cast(extend)->Call(args.This(), 0, NULL);
     }
 
     player_init(obj->player);
 
-    return scope.Close(Undefined());
+    return args.This();
 }
 
 Handle<Value> GstPlayer::start(const Arguments& args)
@@ -48,6 +37,13 @@ Handle<Value> GstPlayer::start(const Arguments& args)
 
     GstPlayer* obj = ObjectWrap::Unwrap<GstPlayer>(args.This());
     player_start(obj->player);
+
+    Handle<Value> argv[2] = {
+        String::NewSymbol("start"),
+        String::New("Starting this mf")
+    };
+
+    node::MakeCallback(args.This(), "emit", 2, argv);
 
     return scope.Close(Undefined());
 }
@@ -65,9 +61,10 @@ Handle<Value> GstPlayer::stop(const Arguments& args)
 
 typedef struct {
     Persistent<Function> callback;
-} UserData;
+    GstPlayer *player;
+} duration_query_data_t;
 
-void duration_query_callback(Song song, gint64 duration, UserData *user_data)
+void duration_query_callback(Song song, gint64 duration, duration_query_data_t *user_data)
 {
     Local<Object> obj = Object::New();
 
@@ -79,7 +76,7 @@ void duration_query_callback(Song song, gint64 duration, UserData *user_data)
 
     Local<Value> argv[argc] = {obj, Number::New(duration)};
 
-    user_data->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+    user_data->callback->Call(user_data->player->handle_, argc, argv);
     user_data->callback.Dispose();
 
     g_free((gpointer) song.artist);
@@ -152,14 +149,15 @@ Handle<Value> GstPlayer::query_duration(const Arguments& args)
     album->WriteAscii(song.album);
     name->WriteAscii(song.name);
 
-    UserData *user_data;
+    duration_query_data_t *user_data;
 
-    user_data = g_new0(UserData, 1);
+    user_data = g_new0(duration_query_data_t, 1);
     user_data->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+    user_data->player = ObjectWrap::Unwrap<GstPlayer>(args.This());
 
     song_query_duration(song, (SongDurationQueryCallback) duration_query_callback, user_data);
 
-    return scope.Close(Undefined());
+    return scope.Close(args.This());
 }
 
 void GstPlayer::Initialize(Handle<Object> exports) {
@@ -168,8 +166,6 @@ void GstPlayer::Initialize(Handle<Object> exports) {
     t->InstanceTemplate()->SetInternalFieldCount(1);
     t->SetClassName(String::NewSymbol("GstPlayer"));
 
-    t->PrototypeTemplate()->Set(String::NewSymbol("init"),
-        FunctionTemplate::New(init)->GetFunction());
     t->PrototypeTemplate()->Set(String::NewSymbol("start"),
         FunctionTemplate::New(start)->GetFunction());
     t->PrototypeTemplate()->Set(String::NewSymbol("stop"),
