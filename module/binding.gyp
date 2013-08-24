@@ -3,11 +3,11 @@
         {
             "target_name": "net_player",
             "sources": [
-                "net_player.cc",
-                "gst_player.cc",
-                "../src/gst_utils.c",
-                "../src/main.c",
-                "../src/player.c",
+                "src/net_player.cc",
+                "src/gst_player.cc",
+                "src/gst_utils.c",
+                "src/main.c",
+                "src/player.c",
             ],
             "cflags": [
                 "<!@(pkg-config --cflags glib-2.0 json-glib-1.0 gstreamer-1.0 gio-unix-2.0)",

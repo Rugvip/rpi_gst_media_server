@@ -1,0 +1,27 @@
+{
+    "name": "gmp3",
+    "version": "0.0.1",
+    "description": "Gstreamer based mp3-player",
+    "keywords": [
+        "mp3",
+        "player",
+        "gstreamer",
+        "gst",
+        "media",
+        "music"
+    ],
+    "author": {
+        "name": "Patrik Oldsberg",
+        "email": "poldsberg@gmail.com"
+    },
+    "main": "lib/player.js",
+    "scripts": {
+        "install": "node-gyp configure build"
+    },
+    "dependencies": {
+        "gcontext": ">=0.0.1"
+    },
+    "engines": {
+        "node": ">=0.8.0"
+    }
+}
