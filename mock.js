@@ -17,8 +17,9 @@ player.on('start', function (str) {
 song: {
     id: string,
     path: string,
-    start: int (ms) = -1,
+    start: int (ms) = 0,
     end: int (ms) = -1,
+    transition: int (ms) = 5000,
 }
 
 playlist: {
@@ -26,19 +27,12 @@ playlist: {
         id: song,
         id: song,
     },
-    transitions: {
-        id: {
-            next: id,
-            transition: time,
-        },
-        id: {
-            next: id,
-            transition: time,
-        },
-        id: {
-            next: null,
-            transition: fade time,
-        }
+    next: {
+        id: id,
+        id: id,
+        id: id,
+        id: id,
+        id: null
     }
 }
 */
@@ -46,11 +40,11 @@ playlist: {
 player.start();
 
 socket.on('play', function (song) {
-    player.play(song);
+    player.setPlaying(song);
 });
 
-player.on('playing', function (id) {
-    socket.write(songs[id]);
+player.on('playing', function (id, time) {
+    socket.write(id, time);
 });
 
 player.on('next', function (id) {
@@ -61,8 +55,46 @@ player.on('end', function () {
     socket.write('end');
 });
 
-var id = player.getPlaying();
-var id = player.getNext();
+socket.on('playlist', function (list) {
+    var playing = player.getPlaying();
+    var next = list.next[playing];
 
+    if (next && !player.isNext(next)) {
+        player.setNext(next);
+    }
+});
+
+socket.on('seek', function (time) {
+    player.seek(time);
+});
+
+/*
+player.setSong(song);
+var id = player.getPlaying();
 player.isPlaying([id]);
-player.hasNext([id]);
+
+player.setNext(song);
+var id = player.getNext();
+player.isNext(id);
+player.hasNext();
+
+player.play();
+player.pause();
+player.stop();
+player.seek(time);
+
+player.getDuration();
+player.getPosition();
+player.getVolume();
+player.getEq();
+
+player.setVolume();
+player.setEq();
+
+player.on('start', function());
+player.on('playing', function(id, duration, position));
+player.on('paused', function(id, position));
+player.on('stopped', function(id));
+player.on('fade', function(id, next));
+
+*/
