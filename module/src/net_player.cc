@@ -20,6 +20,8 @@ Handle<Value> Initialize_gst(const Arguments& args)
         return scope.Close(Undefined());
     }
 
+    g_setenv("GST_DEBUG_DUMP_DOT_DIR", "/home/rugvip/dev", TRUE);
+
     if (args.Length() == 0) {
         int argc = 2;
         char *argv[] = {
