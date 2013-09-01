@@ -97,4 +97,17 @@ player.on('paused', function(id, position));
 player.on('stopped', function(id));
 player.on('fade', function(id, next));
 
+player_transition(Player *)
+{
+    link pad
+    seek next
+    swap playing
+    start fade timer -> callback
+
+    callback () {
+        unlink next pad
+        send next request
+    }
+}
+
 */
