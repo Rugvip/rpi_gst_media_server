@@ -86,7 +86,7 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
         break;
     case GST_MESSAGE_EOS:
         g_printerr("End of stream\n");
-        gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
+        // gst_element_set_state(player->pipeline, GST_STATE_PAUSED);
         break;
 
     case GST_MESSAGE_ERROR: {
@@ -98,6 +98,7 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, Player *player)
 
             g_printerr("Error: %s\n", error->message);
             g_error_free(error);
+            exit(0);
             break;
         }
     default:
@@ -132,41 +133,97 @@ Player *player_alloc()
 
 static MP3Source *mp3_source_init(MP3Source *src, const gchar *name)
 {
-    src->filesrc = gst_element_factory_make("filesrc"        , "file-src");
+    src->filesrc = gst_element_factory_make("filesrc", "file-src");
     g_assert(src->filesrc);
 
-    src->parser  = gst_element_factory_make("mpegaudioparse" , "mpeg-audio-parser");
+    src->parser  = gst_element_factory_make("mpegaudioparse", "mpeg-audio-parser");
     g_assert(src->parser);
 
-    src->decoder = gst_element_factory_make("mpg123audiodec" , "mpeg-audio-decoder");
+    src->decoder = gst_element_factory_make("mpg123audiodec", "mpeg-audio-decoder");
     g_assert(src->decoder);
+
+    src->valve = gst_element_factory_make("valve", "valve");
+    g_assert(src->valve);
 
     src->bin = gst_bin_new(name);
     g_assert(src->bin);
 
-    gst_bin_add_many(GST_BIN(src->bin), src->filesrc, src->parser, src->decoder, NULL);
-    gst_element_link_many(src->filesrc, src->parser, src->decoder, NULL);
+    gst_bin_add_many(GST_BIN(src->bin), src->filesrc, src->parser, src->decoder, src->valve, NULL);
+    gst_element_link_many(src->filesrc, src->parser, src->decoder, src->valve, NULL);
 
-    src->pad = gst_element_get_static_pad(src->decoder, "src");
-    gst_element_add_pad(src->bin, gst_ghost_pad_new("src", src->pad));
-    gst_object_unref(GST_OBJECT(src->pad));
+    src->ghost_pad = gst_element_get_static_pad(src->valve, "src");
+    gst_element_add_pad(src->bin, gst_ghost_pad_new("src", src->ghost_pad));
+    gst_object_unref(GST_OBJECT(src->ghost_pad));
+
+    src->adder_pad = NULL;
 
     gst_object_ref(src->bin);
 
     return src;
 }
 
-static GstPadProbeReturn pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, Player *player)
+void player_link_source(Player *player, MP3Source *src)
 {
-    UNUSED(pad);
-    UNUSED(info);
-    // gst_pad_remove_probe(pad, GST_PAD_PROBE_INFO_ID(info));
-    gst_pad_send_event(player->source[0]->adderPad, gst_event_new_eos());
+    GstPadLinkReturn lret;
+    gboolean success;
+    gchar *name;
 
-    return GST_PAD_PROBE_OK;
+    gst_bin_add(GST_BIN(player->pipeline), src->bin);
+
+    g_object_set(src->valve, "drop", FALSE, NULL);
+
+    g_assert(src->ghost_pad);
+    g_assert(!src->adder_pad);
+
+    src->adder_pad = gst_element_get_request_pad(player->adder, "sink_%u");
+    g_assert(src->adder_pad);
+
+    name = gst_pad_get_name(src->adder_pad);
+    lret = gst_element_link_pads(src->bin, NULL, player->adder, name);
+    g_free(name);
+
+    if (GST_PAD_LINK_FAILED(lret)) {
+        g_print("player link failed: %d\n", lret);
+        g_assert_not_reached();
+    }
+
+    success = gst_element_sync_state_with_parent(GST_ELEMENT(src->bin));
+    g_assert(success);
+
+    gboolean ret;
+    ret = gst_element_seek_simple(src->decoder,
+                                  GST_FORMAT_TIME,
+                                  GST_SEEK_FLAG_ACCURATE,
+                                  50000 * GST_MSECOND);
+    if(ret) {
+        g_printerr("seek done\n");
+    } else {
+        g_warning("seek failed\n");
+    }
 }
 
-gdouble vol = -1.0;
+void player_unlink_source(Player *player, MP3Source *src)
+{
+    gboolean success;
+
+    g_assert(src->adder_pad);
+    g_assert(src->ghost_pad);
+
+    g_object_set(src->valve, "drop", TRUE, NULL);
+
+    GstPad *pad;
+    pad = gst_pad_get_peer(src->adder_pad);
+    success = gst_pad_unlink(pad, src->adder_pad);
+    g_assert(success);
+    gst_object_unref(pad);
+
+    gst_element_set_state(src->bin, GST_STATE_NULL);
+    gst_bin_remove(GST_BIN(player->pipeline), src->bin);
+
+    gst_element_release_request_pad(player->adder, src->adder_pad);
+    src->adder_pad = NULL;
+}
+
 Player *player_init(Player *player)
 {
     GstBus *bus;
@@ -186,56 +243,47 @@ Player *player_init(Player *player)
     player->sink = gst_element_factory_make("alsasink" , "alsa-sink");
     g_assert(player->sink);
 
-    mp3_source_init(player->source[0], "mp3-source-0");
-    mp3_source_init(player->source[1], "mp3-source-1");
-
-    gst_bin_add(GST_BIN(player->pipeline), player->source[0]->bin);
-    gst_bin_add(GST_BIN(player->pipeline), player->source[1]->bin);
-
     gst_bin_add_many(GST_BIN(player->pipeline),
         player->adder, player->volume, player->equalizer, player->sink, NULL);
 
-    gst_element_link(player->source[0]->bin, player->adder);
-    gst_element_link(player->source[1]->bin, player->adder);
+    mp3_source_init(player->source[0], "mp3-source-0");
+    mp3_source_init(player->source[1], "mp3-source-1");
+
+    player_link_source(player, player->source[0]);
+    // player_link_source(player, player->source[1]);
 
     gst_element_link_many(player->adder, player->volume, player->equalizer, player->sink, NULL);
-
-    player->source[0]->adderPad = gst_element_get_static_pad(player->adder, "sink_0");
-    g_assert(player->source[0]->adderPad);
-
-    player->source[1]->adderPad = gst_element_get_static_pad(player->adder, "sink_1");
-    g_assert(player->source[1]->adderPad);
 
     bus = gst_pipeline_get_bus(GST_PIPELINE(player->pipeline));
     player->bus_watch_id = gst_bus_add_watch(bus, (GstBusFunc) bus_call, player);
     gst_object_unref(bus);
 
-    gboolean xfade(Player *player)
-    {
-        // g_printerr("Hi %2.2f %2.2f %2.2f\n", vol, fabs(vol), 1.0 - fabs(vol));
-        g_object_set(player->source[0]->adderPad, "volume", fabs(vol), NULL);
-        g_object_set(player->source[1]->adderPad, "volume", 1.0 - fabs(vol), NULL);
-        vol += 0.02;
-        if (vol > 1.0) {
-            gst_pad_add_probe(player->source[0]->pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-                (GstPadProbeCallback) pad_probe_cb, player, NULL);
-            // gst_element_set_state(player->source[0]->decoder, GST_STATE_READY);
-            // gst_element_unlink(player->source[0]->decoder, player->adder);
-            // gst_bin_remove(GST_BIN(player->pipeline), player->source[0]->bin);
-            // gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
-            g_object_set(player->source[1]->adderPad, "volume", 0.5, NULL);
-            vol = -1.0;
-            return FALSE;
-        }
-        return TRUE;
-    }
+    // gboolean xfade(Player *player)
+    // {
+    //     // g_printerr("Hi %2.2f %2.2f %2.2f\n", vol, fabs(vol), 1.0 - fabs(vol));
+    //     g_object_set(player->source[0]->adder_pad, "volume", fabs(vol), NULL);
+    //     g_object_set(player->source[1]->adder_pad, "volume", 1.0 - fabs(vol), NULL);
+    //     vol += 0.02;
+    //     if (vol > 1.0) {
+    //         gst_pad_add_probe(player->source[0]->pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+    //             (GstPadProbeCallback) pad_probe_cb, player, NULL);
+    //         // gst_element_set_state(player->source[0]->decoder, GST_STATE_READY);
+    //         // gst_element_unlink(player->source[0]->decoder, player->adder);
+    //         // gst_bin_remove(GST_BIN(player->pipeline), player->source[0]->bin);
+    //         // gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    //         g_object_set(player->source[1]->adder_pad, "volume", 0.5, NULL);
+    //         vol = -1.0;
+    //         return FALSE;
+    //     }
+    //     return TRUE;
+    // }
 
     // g_timeout_add(50, (GSourceFunc) xfade, player);
 
     g_object_set(player->sink, "sync", FALSE, NULL);
 
-    g_object_set(player->source[0]->adderPad, "volume", 1.0, NULL);
-    g_object_set(player->source[1]->adderPad, "volume", 1.0, NULL);
+    // g_object_set(player->source[0]->adder_pad, "volume", 1.0, NULL);
+    // g_object_set(player->source[1]->adder_pad, "volume", 1.0, NULL);
 
     g_object_set(player->volume, "volume", 1.0, NULL);
 
@@ -247,20 +295,72 @@ Player *player_init(Player *player)
     return player;
 }
 
+GstPadProbeReturn cbcb(GstPad *pad, GstPadProbeInfo *info, Player *player) {
+    g_print("wat\n");
+    // g_object_set(player->source[1]->output,
+    //     "active-pad", player->source[1]->play_pad, NULL);
+    // gst_pad_remove_probe(pad, GST_PAD_PROBE_INFO_ID(info));
+    // peer = gst_pad_get_peer(player->source[1]->pad);
+    // gst_object_unref(peer);
+    // g_assert(peer);
+    // gst_element_unlink(player->source[1]->bin, player->adder);
+    // gst_element_release_request_pad(player->adder, peer);
+    // gst_element_set_state(GST_ELEMENT(player->source[1]->bin), GST_STATE_READY);
+    return GST_PAD_PROBE_OK;
+}
+
+gboolean watwat(Player *player)
+{
+    g_print("unlink\n");
+    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "uno");
+    // player_unlink_source(player, player->source[0]);
+    // player_unlink_source(player, player->source[1]);
+    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "dos");
+    g_print("done\n");
+    // gst_pad_add_probe(player->source[1]->ghost_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+    //     (GstPadProbeCallback) cbcb, player, NULL);
+
+    // g_object_set(player->source[1]->output,
+    //     "active-pad", player->source[1]->fake_pad, NULL);
+    return FALSE;
+}
+
+gboolean derp(Player *player)
+{
+    static gint id = 1;
+    static gint op = 1;
+    if (op) {
+        g_print("link %d\n", id);
+        player_link_source(player, player->source[id]);
+        id = (id + 1) % 2;
+        op = (op + 1) % 2;
+    } else {
+        g_print("unlink %d\n", id);
+        player_unlink_source(player, player->source[id]);
+        op = (op + 1) % 2;
+    }
+    return TRUE;
+}
+
 void player_start(Player *player)
 {
     g_printerr("starting...\n");
 
-    source_set_song_async(player->source[0]->filesrc, (Song){"Youtube Mixes", "Industrial", "Dark Modulator V"});
+    source_set_song_async(player->source[0]->filesrc, (Song){"Korsakoff", "Stiletto", "Center of mass"});
     // source_set_song_sync(player->source[0]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Get Lucky"});
-    source_set_song_async(player->source[1]->filesrc, (Song){"Daft Punk", "Random Access Memories", "Contact"});
+    source_set_song_async(player->source[1]->filesrc, (Song){"Korsakoff", "Stiletto", "Section Break"});
 
     gst_element_set_state(player->pipeline, GST_STATE_PLAYING);
+    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(player->pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "wat");
+    // gst_element_seek()
+
+    // g_timeout_add(1000, (GSourceFunc) watwat, player);
+    g_timeout_add(2000, (GSourceFunc) derp, player);
 }
 
 void player_stop(Player *player)
 {
-    g_printerr("...stopping\n");
+    g_printerr("\n\n\nSTAHP\n\n\nSTAHP...stopping\n");
     gst_element_set_state(player->pipeline, GST_STATE_NULL);
 
     gst_object_unref(GST_OBJECT(player->pipeline));

@@ -26,11 +26,11 @@ struct _Song {
 };
 
 struct _MP3Source {
-    GstElement *filesrc, *parser, *decoder;
+    GstElement *filesrc, *parser, *decoder, *valve;
     GstElement *bin;
-    GstPad *pad;
+    GstPad *ghost_pad;
     Song song;
-    GstPad *adderPad;
+    GstPad *adder_pad;
 };
 
 struct _Player {
